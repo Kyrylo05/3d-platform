@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block title %}Головна сторінка{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+  <h1 class="display-4">Ласкаво просимо до 3D Платформи!</h1>
+  <p class="lead">Це платформа для замовлення 3D друку. Зареєструйтеся або увійдіть, щоб почати роботу.</p>
+  <hr class="my-4">
+  <p>Натисніть на кнопку нижче, щоб розпочати:</p>
+  <a class="btn btn-primary btn-lg" href="/register" role="button">Зареєструватися</a>
+  <a class="btn btn-secondary btn-lg" href="/login" role="button">Увійти</a>
+</div>
+{% endblock %}
