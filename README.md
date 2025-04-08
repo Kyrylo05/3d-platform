@@ -79,7 +79,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 
 # Запустити застосунок
-python app.py
+python3 app.py
 ``` 
 🖥️ Перейдіть у браузері на:
 http://127.0.0.1:5010
