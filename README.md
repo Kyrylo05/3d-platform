@@ -56,7 +56,8 @@
 ---
 
 ## 🗂 Структура проєкту
-![ChatGPT Image Apr 8, 2025, 05_48_35 PM](https://github.com/user-attachments/assets/c5953eff-c884-4803-8a9c-3a94c56dc8ba)
+![image](https://github.com/user-attachments/assets/f88835ab-6469-4ac3-b218-6eb2bb58a31c)
+
 
 
 
