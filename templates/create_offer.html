@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Створити пропозицію{% endblock %}
+
+{% block content %}
+<h2>Нова пропозиція друку</h2>
+<form method="POST">
+  <div class="form-group">
+    <label for="material">Матеріал</label>
+    <input type="text" class="form-control" id="material" name="material" required>
+  </div>
+  <div class="form-group">
+    <label for="layer_height">Товщина шару (мм)</label>
+    <input type="number" step="0.01" class="form-control" id="layer_height" name="layer_height" required>
+  </div>
+  <div class="form-group">
+    <label for="price_per_gram">Ціна за грам (грн)</label>
+    <input type="number" step="0.01" class="form-control" id="price_per_gram" name="price_per_gram" required>
+  </div>
+  <div class="form-group">
+    <label for="min_size">Мін. розмір моделі</label>
+    <input type="text" class="form-control" id="min_size" name="min_size" required>
+  </div>
+  <div class="form-group">
+    <label for="max_size">Макс. розмір моделі</label>
+    <input type="text" class="form-control" id="max_size" name="max_size" required>
+  </div>
+  <button type="submit" class="btn btn-success">Створити</button>
+</form>
+{% endblock %}

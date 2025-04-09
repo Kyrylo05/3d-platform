@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Список пропозицій{% endblock %}
+
+{% block content %}
+<h2>Усі доступні пропозиції</h2>
+<div class="row">
+  {% for offer in offers %}
+    <div class="col-md-4">
+      <div class="card mb-4">
+        <div class="card-body">
+          <h5 class="card-title">{{ offer.material }}</h5>
+          <p class="card-text">
+            Товщина шару: {{ offer.layer_height }} мм<br>
+            Ціна за грам: {{ offer.price_per_gram }} грн<br>
+            Розміри: від {{ offer.min_size }} до {{ offer.max_size }}<br>
+            Друкар: {{ offer.contractor.company_name }}
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endfor %}
+</div>
+{% endblock %}

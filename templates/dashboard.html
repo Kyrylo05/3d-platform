@@ -3,7 +3,15 @@
 {% block title %}Особистий кабінет{% endblock %}
 
 {% block content %}
-<h2>Привіт, {{ user.name }}!</h2>
-<p>Це твій особистий кабінет.</p>
-<a href="{{ url_for('main.logout') }}" class="btn btn-danger">Вийти</a>
+<h2>Привіт, {{ user.full_name or user.company_name }}!</h2>
+
+{% if role == 'customer' %}
+  <p>Ти увійшов як <strong>Замовник</strong>.</p>
+  <a href="{{ url_for('main.view_offers') }}" class="btn btn-primary">Переглянути всі пропозиції друкарів</a>
+{% elif role == 'contractor' %}
+  <p>Ти увійшов як <strong>Друкар</strong>.</p>
+  <a href="{{ url_for('main.create_offer') }}" class="btn btn-success">Створити нову пропозицію</a>
+{% endif %}
+
+<a href="{{ url_for('main.logout') }}" class="btn btn-danger mt-3">Вийти</a>
 {% endblock %}

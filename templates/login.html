@@ -3,17 +3,31 @@
 {% block title %}Вхід{% endblock %}
 
 {% block content %}
-<h1>Вхід</h1>
-<form action="/login" method="post">
-  <div class="form-group">
-    <label for="email">Email:</label>
-    <input type="email" class="form-control" id="email" name="email" required>
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <h2 class="text-center mb-4">Вхід {% if role == 'customer' %}Замовника{% else %}Друкаря{% endif %}</h2>
+
+      <form action="/login/{{ role }}" method="POST">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" class="form-control" name="email" required>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Пароль</label>
+          <input type="password" class="form-control" name="password" required>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          Увійти як {% if role == 'customer' %}Замовник{% else %}Друкар{% endif %}
+        </button>
+      </form>
+
+      <p class="text-center mt-3">
+        Не маєш акаунту? <a href="/register/{{ role }}">Реєстрація</a>
+      </p>
+    </div>
   </div>
-  <div class="form-group">
-    <label for="password">Пароль:</label>
-    <input type="password" class="form-control" id="password" name="password" required>
-  </div>
-  <button type="submit" class="btn btn-primary">Увійти</button>
-</form>
-<p class="mt-3">Ще не зареєстрований? <a href="/register">Зареєструйся тут</a></p>
+</div>
 {% endblock %}

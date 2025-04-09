@@ -1,0 +1,35 @@
+# 🔥 Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# 🐍 Віртуальне середовище
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# 💽 SQLite база
+*.sqlite3
+*.db
+site.db
+
+# 🧪 Тестові артефакти
+.coverage
+.tox/
+.nox/
+.cache/
+pytest_cache/
+
+# 🧪 VS Code
+.vscode/
+
+# 📁 Секрети / тимчасові файли
+.env
+*.secret
+*.bak
+.DS_Store
+Thumbs.db
