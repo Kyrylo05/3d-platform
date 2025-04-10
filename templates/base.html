@@ -21,36 +21,60 @@
     <div class="collapse navbar-collapse" id="navbarNav">
       <ul class="navbar-nav ml-auto">
 
-        <!-- Замовник -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="dropdownCustomer" role="button"
-             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Замовник
-          </a>
-          <div class="dropdown-menu" aria-labelledby="dropdownCustomer">
-            <a class="dropdown-item" href="/register/customer">Реєстрація</a>
-            <a class="dropdown-item" href="/login/customer">Вхід</a>
-            <a class="dropdown-item" href="/dashboard/customer">Кабінет</a>
-          </div>
-        </li>
+        {% if current_user.is_authenticated %}
+          {% if current_user.__class__.__name__ == 'Customer' %}
+            <!-- Меню Замовника -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownCustomer" role="button"
+                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Замовник
+              </a>
+              <div class="dropdown-menu" aria-labelledby="dropdownCustomer">
+                <a class="dropdown-item" href="/dashboard/customer">Кабінет</a>
+                <a class="dropdown-item" href="/offers">Переглянути пропозиції</a>
+              </div>
+            </li>
+          {% elif current_user.__class__.__name__ == 'Contractor' %}
+            <!-- Меню Друкаря -->
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="dropdownContractor" role="button"
+                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Друкар
+              </a>
+              <div class="dropdown-menu" aria-labelledby="dropdownContractor">
+                <a class="dropdown-item" href="/dashboard/contractor">Кабінет</a>
+                <a class="dropdown-item" href="/contractor/create_offer">Створити пропозицію</a>
+              </div>
+            </li>
+          {% endif %}
 
-        <!-- Друкар -->
-        <li class="nav-item dropdown">
-          <a class="nav-link dropdown-toggle" href="#" id="dropdownContractor" role="button"
-             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            Друкар
-          </a>
-          <div class="dropdown-menu" aria-labelledby="dropdownContractor">
-            <a class="dropdown-item" href="/register/contractor">Реєстрація</a>
-            <a class="dropdown-item" href="/login/contractor">Вхід</a>
-            <a class="dropdown-item" href="/dashboard/contractor">Кабінет</a>
-          </div>
-        </li>
-
-        <!-- Вихід -->
-        <li class="nav-item">
-          <a class="nav-link" href="/logout">Вийти</a>
-        </li>
+          <!-- Вихід -->
+          <li class="nav-item">
+            <a class="nav-link" href="/logout">Вийти</a>
+          </li>
+        {% else %}
+          <!-- Для гостей -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdownCustomer" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Замовник
+            </a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/register/customer">Реєстрація</a>
+              <a class="dropdown-item" href="/login/customer">Вхід</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="dropdownContractor" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              Друкар
+            </a>
+            <div class="dropdown-menu">
+              <a class="dropdown-item" href="/register/contractor">Реєстрація</a>
+              <a class="dropdown-item" href="/login/contractor">Вхід</a>
+            </div>
+          </li>
+        {% endif %}
 
       </ul>
     </div>

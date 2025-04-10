@@ -8,9 +8,35 @@
 {% if role == 'customer' %}
   <p>Ти увійшов як <strong>Замовник</strong>.</p>
   <a href="{{ url_for('main.view_offers') }}" class="btn btn-primary">Переглянути всі пропозиції друкарів</a>
+  <a href="{{ url_for('main.edit_profile', role=role) }}" class="btn btn-outline-primary">Редагувати профіль</a>
+
 {% elif role == 'contractor' %}
   <p>Ти увійшов як <strong>Друкар</strong>.</p>
   <a href="{{ url_for('main.create_offer') }}" class="btn btn-success">Створити нову пропозицію</a>
+  <a href="{{ url_for('main.edit_profile', role=role) }}" class="btn btn-outline-primary">Редагувати профіль</a>
+
+  {% if offers %}
+    <h4 class="mt-4">Твої пропозиції:</h4>
+    <ul class="list-group mt-2">
+      {% for offer in offers %}
+      <li class="list-group-item">
+        <strong>{{ offer.material }}</strong>,
+        {{ offer.layer_height }} мм,
+        {{ offer.price_per_gram }} грн/г
+
+        <div class="mt-2">
+          <a href="{{ url_for('main.offer_detail', offer_id=offer.id) }}" class="btn btn-sm btn-outline-secondary">Переглянути</a>
+          <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}" class="btn btn-sm btn-outline-info">Редагувати</a>
+          <form action="{{ url_for('main.delete_offer', offer_id=offer.id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Точно видалити?');">
+            <button type="submit" class="btn btn-sm btn-outline-danger">Видалити</button>
+          </form>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="mt-3">У тебе ще немає жодної пропозиції.</p>
+  {% endif %}
 {% endif %}
 
 <a href="{{ url_for('main.logout') }}" class="btn btn-danger mt-3">Вийти</a>

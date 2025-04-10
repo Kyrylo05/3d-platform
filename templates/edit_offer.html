@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Редагувати пропозицію{% endblock %}
+
+{% block content %}
+<h2>Редагування пропозиції</h2>
+<form method="POST" enctype="multipart/form-data">
+  <div class="form-group">
+    <label>Матеріал</label>
+    <input type="text" class="form-control" name="material" value="{{ offer.material }}" required>
+  </div>
+  <div class="form-group">
+    <label>Товщина шару (мм)</label>
+    <input type="number" step="0.01" class="form-control" name="layer_height" value="{{ offer.layer_height }}" required>
+  </div>
+  <div class="form-group">
+    <label>Ціна за грам (грн)</label>
+    <input type="number" step="0.01" class="form-control" name="price_per_gram" value="{{ offer.price_per_gram }}" required>
+  </div>
+  <div class="form-group">
+    <label>Мін. розмір</label>
+    <input type="text" class="form-control" name="min_size" value="{{ offer.min_size }}" required>
+  </div>
+  <div class="form-group">
+    <label>Макс. розмір</label>
+    <input type="text" class="form-control" name="max_size" value="{{ offer.max_size }}" required>
+  </div>
+  <div class="form-group">
+    <label>Завантажити нові фото (до 3):</label>
+    <input type="file" name="images" multiple class="form-control-file">
+  </div>
+  <button type="submit" class="btn btn-success">Зберегти</button>
+  <a href="{{ url_for('main.dashboard', role='contractor') }}" class="btn btn-secondary">Скасувати</a>
+</form>
+{% endblock %}

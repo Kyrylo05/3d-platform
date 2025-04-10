@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Редагування профілю{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+  <h2 class="mb-4">Налаштування профілю</h2>
+
+  <form method="POST" enctype="multipart/form-data">
+    
+    <!-- Зображення -->
+    <div class="form-group">
+      <label>Поточне фото:</label><br>
+      <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}" class="rounded-circle mb-3" width="80">
+    </div>
+
+    <!-- Нове фото -->
+    <div class="form-group">
+      <label for="profile_image">Нове фото профілю</label>
+      <input type="file" name="profile_image" class="form-control">
+    </div>
+    
+
+    <!-- Ім’я або назва компанії -->
+    <div class="form-group">
+      <label for="name">
+        {% if role == 'customer' %}
+          Ім’я та прізвище
+        {% else %}
+          Назва компанії
+        {% endif %}
+      </label>
+      <input type="text" name="name" class="form-control"
+             value="{% if role=='customer' %}{{ user.full_name }}{% else %}{{ user.company_name }}{% endif %}" required>
+    </div>
+
+    <button type="submit" class="btn btn-success">Зберегти зміни</button>
+    <a href="{{ url_for('main.dashboard', role=role) }}" class="btn btn-secondary ml-2">Назад</a>
+  </form>
+</div>
+{% endblock %}

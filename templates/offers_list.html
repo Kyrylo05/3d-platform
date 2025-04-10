@@ -1,24 +1,65 @@
 {% extends "base.html" %}
+{% block title %}Пропозиції{% endblock %}
 
-{% block title %}Список пропозицій{% endblock %}
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='offers.css') }}">
+{% endblock %}
 
 {% block content %}
-<h2>Усі доступні пропозиції</h2>
+<h2 class="text-center mb-5">Усі доступні пропозиції</h2>
+
 <div class="row">
   {% for offer in offers %}
-    <div class="col-md-4">
-      <div class="card mb-4">
-        <div class="card-body">
-          <h5 class="card-title">{{ offer.material }}</h5>
-          <p class="card-text">
-            Товщина шару: {{ offer.layer_height }} мм<br>
-            Ціна за грам: {{ offer.price_per_gram }} грн<br>
-            Розміри: від {{ offer.min_size }} до {{ offer.max_size }}<br>
-            Друкар: {{ offer.contractor.company_name }}
-          </p>
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm">
+
+      <!-- Аватар + Ім’я -->
+      <div class="card-header bg-white d-flex align-items-center">
+        <img src="{{ url_for('static', filename='uploads/' ~ offer.contractor.profile_image) }}"
+             class="rounded-circle mr-2" width="50" height="50" style="object-fit: cover;" alt="Фото профілю">
+        <h5 class="mb-0">{{ offer.contractor.company_name }}</h5>
+      </div>
+
+      <!-- Слайдер з правильними назвами -->
+      <div id="carousel{{ offer.id }}" class="carousel slide" data-ride="carousel">
+        <div class="carousel-inner">
+          {% for i in range(1, 4) %}
+          <div class="carousel-item {% if i == 1 %}active{% endif %}">
+            <img src="{{ url_for('static', filename='examples/offer_' ~ offer.id ~ '_example_' ~ i ~ '.jpg') }}"
+                 class="d-block w-100" style="height: 200px; object-fit: cover;" alt="Фото {{ i }}">
+          </div>
+          {% endfor %}
+        </div>
+        <a class="carousel-control-prev" href="#carousel{{ offer.id }}" role="button" data-slide="prev">
+          <span class="carousel-control-prev-icon"></span>
+        </a>
+        <a class="carousel-control-next" href="#carousel{{ offer.id }}" role="button" data-slide="next">
+          <span class="carousel-control-next-icon"></span>
+        </a>
+      </div>
+
+      <!-- Тіло картки -->
+      <div class="card-body">
+        <h5 class="text-primary">{{ offer.material }}</h5>
+        <p><strong>Товщина шару:</strong> {{ offer.layer_height }} мм</p>
+        <p><strong>Розміри:</strong> {{ offer.min_size }} – {{ offer.max_size }}</p>
+        <h4 class="text-success text-center">{{ offer.price_per_gram }} грн/г</h4>
+      </div>
+
+      <!-- Кнопки -->
+      <div class="card-footer bg-white">
+        <div class="row no-gutters">
+          <div class="col-6 pr-1">
+            <a href="{{ url_for('main.offer_detail', offer_id=offer.id) }}" class="btn btn-outline-primary btn-block">Детальніше</a>
+          </div>
+          <div class="col-6 pl-1">
+            <a href="{{ url_for('main.create_order', offer_id=offer.id) }}" class="btn btn-danger btn-block">Замовити</a>
+          </div>
         </div>
       </div>
+
     </div>
+  </div>
   {% endfor %}
 </div>
 {% endblock %}

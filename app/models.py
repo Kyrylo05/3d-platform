@@ -9,21 +9,21 @@ class Customer(db.Model, UserMixin):
     full_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    profile_image = db.Column(db.String(200), default='default-avatar.png')  # Фото профілю
     rating = db.Column(db.Float, default=0.0)
 
     orders = db.relationship('Order', backref='customer', lazy=True)
-
 
 class Contractor(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
+    profile_image = db.Column(db.String(200), default='default-avatar.png')  # Фото профілю
     rating = db.Column(db.Float, default=0.0)
 
     offers = db.relationship('Offer', backref='contractor', lazy=True)
     orders = db.relationship('Order', backref='contractor', lazy=True)
-
 
 class Offer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -35,7 +35,6 @@ class Offer(db.Model):
 
     contractor_id = db.Column(db.Integer, db.ForeignKey('contractor.id'), nullable=False)
     orders = db.relationship('Order', backref='offer', lazy=True)
-
 
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
