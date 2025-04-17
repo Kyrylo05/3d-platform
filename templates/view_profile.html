@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Перегляд профілю{% endblock %}
+
+{% block content %}
+<div class="card mt-4">
+  <div class="card-header d-flex align-items-center">
+    <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
+         class="rounded-circle mr-3" width="80" height="80" style="object-fit: cover;">
+    <div>
+      {% if role=='contractor' %}
+        <h4 class="mb-0">{{ user.company_name }}</h4>
+      {% else %}
+        <h4 class="mb-0">{{ user.full_name }}</h4>
+      {% endif %}
+      <small>{{ user.email }}</small>
+    </div>
+  </div>
+  <div class="card-body">
+    <p><strong>Рейтинг:</strong> {{ user.rating }}</p>
+    <!-- Можна ще показати пропозиції чи історію замовлень, якщо треба -->
+  </div>
+</div>
+{% endblock %}

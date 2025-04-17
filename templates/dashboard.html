@@ -1,43 +1,78 @@
 {% extends "base.html" %}
-
-{% block title %}Особистий кабінет{% endblock %}
+{% block title %}Кабінет друкаря{% endblock %}
 
 {% block content %}
-<h2>Привіт, {{ user.full_name or user.company_name }}!</h2>
+<h2 class="mb-4">Кабінет друкаря</h2>
+<a href="{{ url_for('main.create_offer') }}" class="btn btn-success mb-4">Створити пропозицію</a>
 
-{% if role == 'customer' %}
-  <p>Ти увійшов як <strong>Замовник</strong>.</p>
-  <a href="{{ url_for('main.view_offers') }}" class="btn btn-primary">Переглянути всі пропозиції друкарів</a>
-  <a href="{{ url_for('main.edit_profile', role=role) }}" class="btn btn-outline-primary">Редагувати профіль</a>
+<h4 class="mb-3">Мої пропозиції</h4>
+<div class="row">
+  {% for offer in offers %}
+    {% set latest_order = offer.orders|sort(attribute='timestamp')|last %}
+    {% if latest_order %}
+      {% set hours_elapsed = ((now - latest_order.timestamp).total_seconds() // 3600)|int %}
+      {% if hours_elapsed < 1 %}
+        {% set highlight_class = 'bg-danger' %}
+      {% elif hours_elapsed < 16 %}
+        {% set highlight_class = 'bg-warning' %}
+      {% else %}
+        {% set highlight_class = '' %}
+      {% endif %}
+    {% else %}
+      {% set highlight_class = '' %}
+    {% endif %}
 
-{% elif role == 'contractor' %}
-  <p>Ти увійшов як <strong>Друкар</strong>.</p>
-  <a href="{{ url_for('main.create_offer') }}" class="btn btn-success">Створити нову пропозицію</a>
-  <a href="{{ url_for('main.edit_profile', role=role) }}" class="btn btn-outline-primary">Редагувати профіль</a>
+    <div class="col-md-4 mb-4">
+      <div class="card h-100 shadow-sm {{ highlight_class }}">
 
-  {% if offers %}
-    <h4 class="mt-4">Твої пропозиції:</h4>
-    <ul class="list-group mt-2">
-      {% for offer in offers %}
-      <li class="list-group-item">
-        <strong>{{ offer.material }}</strong>,
-        {{ offer.layer_height }} мм,
-        {{ offer.price_per_gram }} грн/г
-
-        <div class="mt-2">
-          <a href="{{ url_for('main.offer_detail', offer_id=offer.id) }}" class="btn btn-sm btn-outline-secondary">Переглянути</a>
-          <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}" class="btn btn-sm btn-outline-info">Редагувати</a>
-          <form action="{{ url_for('main.delete_offer', offer_id=offer.id) }}" method="POST" style="display:inline-block;" onsubmit="return confirm('Точно видалити?');">
-            <button type="submit" class="btn btn-sm btn-outline-danger">Видалити</button>
-          </form>
+        <div class="card-header d-flex align-items-center bg-white">
+          <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
+               class="rounded-circle mr-2" width="50" height="50" style="object-fit: cover;" alt="Фото профілю">
+          <h5 class="mb-0">{{ user.company_name }}</h5>
         </div>
-      </li>
-      {% endfor %}
-    </ul>
-  {% else %}
-    <p class="mt-3">У тебе ще немає жодної пропозиції.</p>
-  {% endif %}
-{% endif %}
 
-<a href="{{ url_for('main.logout') }}" class="btn btn-danger mt-3">Вийти</a>
+        <div id="carousel{{ offer.id }}" class="carousel slide" data-ride="carousel">
+          <div class="carousel-inner">
+            {% for i in range(1, 4) %}
+              <div class="carousel-item {% if i == 1 %}active{% endif %}">
+                <img src="{{ url_for('static', filename='examples/offer_' ~ offer.id ~ '_example_' ~ i ~ '.jpg') }}"
+                     class="d-block w-100" style="height: 180px; object-fit: cover;" alt="Приклад {{ i }}">
+              </div>
+            {% endfor %}
+          </div>
+          <a class="carousel-control-prev" href="#carousel{{ offer.id }}" role="button" data-slide="prev">
+            <span class="carousel-control-prev-icon"></span>
+          </a>
+          <a class="carousel-control-next" href="#carousel{{ offer.id }}" role="button" data-slide="next">
+            <span class="carousel-control-next-icon"></span>
+          </a>
+        </div>
+
+        <div class="card-body">
+          <h5 class="text-primary">{{ offer.material }}</h5>
+          <p><strong>Товщина шару:</strong> {{ offer.layer_height }} мм</p>
+          <p><strong>Розміри:</strong> {{ offer.min_size }} – {{ offer.max_size }}</p>
+          <h4 class="text-success text-center">{{ offer.price_per_gram }} грн/г</h4>
+        </div>
+
+        <div class="card-footer bg-white">
+          <div class="row">
+            <div class="col-12 mb-2">
+              <a href="{{ url_for('main.offer_detail', offer_id=offer.id) }}" class="btn btn-outline-primary btn-block">Детальніше</a>
+            </div>
+            <div class="col-6 pr-1">
+              <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}" class="btn btn-info btn-block">Редагувати</a>
+            </div>
+            <div class="col-6 pl-1">
+              <form method="POST" action="{{ url_for('main.delete_offer', offer_id=offer.id) }}">
+                <button type="submit" class="btn btn-danger btn-block">Видалити</button>
+              </form>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  {% endfor %}
+</div>
 {% endblock %}

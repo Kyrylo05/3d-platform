@@ -1,34 +1,12 @@
 {% extends "base.html" %}
-
-{% block title %}3D Платформа — вибір ролі{% endblock %}
+{% block title %}Головна{% endblock %}
 
 {% block content %}
-<div class="d-flex flex-column align-items-center justify-content-center text-center" style="min-height: 80vh;">
-  <h1 class="display-4 mb-3">👋 Вітаємо у <strong>3D Платформі</strong></h1>
-  <p class="lead mb-5">Щоб продовжити, оберіть свою роль:</p>
-
-  <div class="row justify-content-center w-100">
-    <!-- Замовник -->
-    <div class="col-md-4 mb-4">
-      <div class="card border-0 shadow-lg rounded-3">
-        <div class="card-body">
-          <h4 class="card-title mb-4">🧾 Я замовник</h4>
-          <a href="/register/customer" class="btn btn-primary btn-lg btn-block mb-2">Реєстрація</a>
-          <a href="/login/customer" class="btn btn-outline-secondary btn-lg btn-block">Вхід</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Друкар -->
-    <div class="col-md-4 mb-4">
-      <div class="card border-0 shadow-lg rounded-3">
-        <div class="card-body">
-          <h4 class="card-title mb-4">🖨️ Я друкар</h4>
-          <a href="/register/contractor" class="btn btn-primary btn-lg btn-block mb-2">Реєстрація</a>
-          <a href="/login/contractor" class="btn btn-outline-secondary btn-lg btn-block">Вхід</a>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="jumbotron text-center">
+  <h1>3D Платформа</h1>
+  <p>Вітаємо! Оберіть роль і ввійдіть чи зареєструйтесь</p>
+  <hr>
+  <a href="/register?role=customer" class="btn btn-primary">Я Замовник</a>
+  <a href="/register?role=contractor" class="btn btn-info">Я Друкар</a>
 </div>
 {% endblock %}

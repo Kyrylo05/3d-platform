@@ -16,9 +16,9 @@
     <h5 class="text-primary">Матеріал: {{ offer.material }}</h5>
     <p><strong>Товщина шару:</strong> {{ offer.layer_height }} мм</p>
     <p><strong>Ціна за грам:</strong> {{ offer.price_per_gram }} грн</p>
-    <p><strong>Розміри:</strong> від {{ offer.min_size }} до {{ offer.max_size }}</p>
+    <p><strong>Розміри:</strong> {{ offer.min_size }} – {{ offer.max_size }}</p>
 
-    <!-- Слайдер із прикладами -->
+    <!-- Слайдер -->
     <div id="carouselDetail" class="carousel slide mt-4 mb-4" data-ride="carousel">
       <div class="carousel-inner">
         {% for i in range(1, 4) %}
@@ -36,9 +36,28 @@
       </a>
     </div>
 
-    <a href="{{ url_for('main.create_order', offer_id=offer.id) }}" class="btn btn-success btn-block">
-      Оформити замовлення
-    </a>
+    {% if role == 'customer' %}
+      <a href="{{ url_for('main.create_order', offer_id=offer.id) }}" class="btn btn-success btn-block">
+        Оформити замовлення
+      </a>
+    {% elif role == 'contractor' %}
+      {% if offer.orders %}
+
+        <div class="alert alert-warning mt-3">Є замовлення на цю пропозицію</div>
+
+        {% if order %}
+        <div class="alert alert-info">
+          <strong>Завантажити STL-файл замовлення:</strong>
+          <a href="{{ url_for('static', filename='stl_files/' ~ order.stl_filename) }}" class="btn btn-success" download>
+            Завантажити {{ order.stl_filename }}
+          </a>
+        </div>
+        {% endif %}
+
+      {% else %}
+        <div class="text-muted text-center mt-3">Замовлень ще немає</div>
+      {% endif %}
+    {% endif %}
   </div>
 </div>
 {% endblock %}

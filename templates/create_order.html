@@ -1,13 +1,52 @@
 {% extends "base.html" %}
-{% block title %}Замовлення{% endblock %}
+{% block title %}Оформлення замовлення{% endblock %}
 
 {% block content %}
-<h2>Оформлення замовлення</h2>
-<p>Пропозиція від {{ offer.contractor.company_name }}</p>
-<p>Ціна за грам: {{ offer.price_per_gram }} грн</p>
+<div class="container">
+  <h2 class="mb-4">Оформлення замовлення</h2>
 
-<form method="post">
-  <p><strong>STL-файл:</strong> (заглушка)</p>
-  <button type="submit" class="btn btn-success">Підтвердити</button>
-</form>
+  <p><strong>Пропозиція від {{ offer.contractor.company_name }} ({{ offer.material }})</strong></p>
+  <p>Ціна за грам: {{ offer.price_per_gram }} грн</p>
+
+  <!-- Область завантаження файлу -->
+  <form action="{{ url_for('main.create_order', offer_id=offer.id) }}" method="POST" enctype="multipart/form-data">
+    <div class="form-group">
+      <label for="stl_file">Перетягніть сюди STL-файл:</label>
+      <div id="drop_zone"
+           style="border: 3px dashed #007BFF; padding: 40px; text-align: center; cursor: pointer;">
+        Перетягніть STL-файл сюди або натисніть для вибору
+      </div>
+      <input type="file" id="stl_file" name="stl_file" accept=".stl" hidden required>
+    </div>
+    <button type="submit" class="btn btn-success">Підтвердити</button>
+  </form>
+</div>
+
+<script>
+const dropZone = document.getElementById('drop_zone');
+const fileInput = document.getElementById('stl_file');
+
+dropZone.addEventListener('click', () => fileInput.click());
+
+dropZone.addEventListener('dragover', (e) => {
+  e.preventDefault();
+  dropZone.style.backgroundColor = '#e8f0fe';
+});
+
+dropZone.addEventListener('dragleave', () => {
+  dropZone.style.backgroundColor = '';
+});
+
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  fileInput.files = e.dataTransfer.files;
+  dropZone.textContent = `Вибрано файл: ${e.dataTransfer.files[0].name}`;
+  dropZone.style.backgroundColor = '';
+});
+
+fileInput.addEventListener('change', (e) => {
+  dropZone.textContent = `Вибрано файл: ${e.target.files[0].name}`;
+});
+</script>
+
 {% endblock %}

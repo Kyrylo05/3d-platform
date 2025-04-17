@@ -1,40 +1,34 @@
 {% extends "base.html" %}
-{% block title %}Редагування профілю{% endblock %}
+{% block title %}Редагувати профіль{% endblock %}
 
 {% block content %}
-<div class="container mt-5">
-  <h2 class="mb-4">Налаштування профілю</h2>
+<div class="container mt-4">
+  <h2>Редагування профілю</h2>
 
   <form method="POST" enctype="multipart/form-data">
-    
-    <!-- Зображення -->
     <div class="form-group">
+      <!-- Поточне фото -->
       <label>Поточне фото:</label><br>
-      <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}" class="rounded-circle mb-3" width="80">
+      <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
+           class="rounded-circle mb-2" width="80" height="80" style="object-fit: cover;">
     </div>
 
-    <!-- Нове фото -->
     <div class="form-group">
-      <label for="profile_image">Нове фото профілю</label>
-      <input type="file" name="profile_image" class="form-control">
+      <label>Нове фото</label>
+      <input type="file" name="profile_image" class="form-control-file">
     </div>
-    
 
-    <!-- Ім’я або назва компанії -->
     <div class="form-group">
-      <label for="name">
-        {% if role == 'customer' %}
-          Ім’я та прізвище
-        {% else %}
-          Назва компанії
-        {% endif %}
-      </label>
-      <input type="text" name="name" class="form-control"
-             value="{% if role=='customer' %}{{ user.full_name }}{% else %}{{ user.company_name }}{% endif %}" required>
+      {% if role=='customer' %}
+        <label>Ім'я та прізвище</label>
+        <input type="text" name="name" class="form-control" value="{{ user.full_name }}">
+      {% else %}
+        <label>Назва компанії</label>
+        <input type="text" name="name" class="form-control" value="{{ user.company_name }}">
+      {% endif %}
     </div>
 
-    <button type="submit" class="btn btn-success">Зберегти зміни</button>
-    <a href="{{ url_for('main.dashboard', role=role) }}" class="btn btn-secondary ml-2">Назад</a>
+    <button type="submit" class="btn btn-primary">Зберегти</button>
   </form>
 </div>
 {% endblock %}

@@ -1,7 +1,5 @@
-from flask_sqlalchemy import SQLAlchemy
 from flask_login import UserMixin
 from datetime import datetime
-
 from app import db
 
 class Customer(db.Model, UserMixin):
@@ -9,7 +7,7 @@ class Customer(db.Model, UserMixin):
     full_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    profile_image = db.Column(db.String(200), default='default-avatar.png')  # Фото профілю
+    profile_image = db.Column(db.String(200), default='default-avatar.png')
     rating = db.Column(db.Float, default=0.0)
 
     orders = db.relationship('Order', backref='customer', lazy=True)
@@ -19,7 +17,7 @@ class Contractor(db.Model, UserMixin):
     company_name = db.Column(db.String(150), nullable=False)
     email = db.Column(db.String(150), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
-    profile_image = db.Column(db.String(200), default='default-avatar.png')  # Фото профілю
+    profile_image = db.Column(db.String(200), default='default-avatar.png')
     rating = db.Column(db.Float, default=0.0)
 
     offers = db.relationship('Offer', backref='contractor', lazy=True)
