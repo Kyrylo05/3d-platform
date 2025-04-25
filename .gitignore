@@ -52,3 +52,20 @@ Thumbs.db
 # 🔒 Звіти, тимчасові збереження
 *.orig
 *.save
+
+# База даних
+*.sqlite3
+*.db
+site.db
+
+# Міграції
+migrations/
+
+# Завантаження
+app/static/uploads/
+app/static/examples/
+app/static/stl_files/
+
+# Flask instance
+instance/
+
