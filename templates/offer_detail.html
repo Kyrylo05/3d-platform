@@ -8,23 +8,23 @@
          class="rounded-circle mr-3" width="80" height="80" style="object-fit: cover;" alt="Фото профілю">
     <div>
       <h4 class="mb-0">{{ offer.contractor.company_name }}</h4>
-      <small>Рейтинг: {{ offer.contractor.rating }}</small>
+      <small>Рейтинг: {{ "%.1f"|format(offer.contractor.rating) }}</small>
     </div>
   </div>
 
   <div class="card-body">
     <h5 class="text-primary">Матеріал: {{ offer.material }}</h5>
     <p><strong>Товщина шару:</strong> {{ offer.layer_height }} мм</p>
-    <p><strong>Ціна за грам:</strong> {{ offer.price_per_gram }} грн</p>
+    <p><strong>Ціна за грам:</strong> {{ offer.price_per_gram }} ₴</p>
     <p><strong>Розміри:</strong> {{ offer.min_size }} – {{ offer.max_size }}</p>
 
-    <!-- Слайдер -->
-    <div id="carouselDetail" class="carousel slide mt-4 mb-4" data-ride="carousel">
+    <!-- Слайдер фото-зразків -->
+    <div id="carouselDetail" class="carousel slide my-4" data-ride="carousel">
       <div class="carousel-inner">
         {% for i in range(1, 4) %}
         <div class="carousel-item {% if i == 1 %}active{% endif %}">
           <img src="{{ url_for('static', filename='examples/offer_' ~ offer.id ~ '_example_' ~ i ~ '.jpg') }}"
-               class="d-block w-100" style="height: 220px; object-fit: cover;" alt="Зразок {{ i }}">
+               class="d-block w-100" style="height:220px;object-fit:cover" alt="Зразок {{ i }}">
         </div>
         {% endfor %}
       </div>
@@ -36,28 +36,60 @@
       </a>
     </div>
 
-    {% if role == 'customer' %}
-      <a href="{{ url_for('main.create_order', offer_id=offer.id) }}" class="btn btn-success btn-block">
-        Оформити замовлення
-      </a>
-    {% elif role == 'contractor' %}
-      {% if offer.orders %}
+    {# ---------- Кнопки й повідомлення ---------- #}
 
-        <div class="alert alert-warning mt-3">Є замовлення на цю пропозицію</div>
+    {# Лише замовник, якщо ще не робив order #}
+    {% if role == 'customer' and not order %}
+      <a href="{{ url_for('main.create_order', offer_id=offer.id) }}"
+         class="btn btn-primary btn-block mb-3">Замовити друк</a>
+    {% endif %}
 
-        {% if order %}
-        <div class="alert alert-info">
-          <strong>Завантажити STL-файл замовлення:</strong>
-          <a href="{{ url_for('static', filename='stl_files/' ~ order.stl_filename) }}" class="btn btn-success" download>
-            Завантажити {{ order.stl_filename }}
-          </a>
+    {# Друкар: прийняти / відхилити #}
+    {% if role == 'contractor' and order and order.status == 'Очікує підтвердження' %}
+      <form action="{{ url_for('main.accept_order', order_id=order.id) }}" method="POST" class="mb-2">
+        <button class="btn btn-success btn-block">Прийняти замовлення</button>
+      </form>
+
+      <form action="{{ url_for('main.reject_order', order_id=order.id) }}" method="POST">
+        <div class="form-group">
+          <label for="rejection_reason">Причина відмови:</label>
+          <textarea name="rejection_reason" id="rejection_reason" class="form-control" required></textarea>
         </div>
-        {% endif %}
+        <button class="btn btn-danger btn-block">Відмовити</button>
+      </form>
+    {% endif %}
 
-      {% else %}
-        <div class="text-muted text-center mt-3">Замовлень ще немає</div>
+    {# Статуси для замовника #}
+    {% if role == 'customer' and order %}
+      {% if order.status == 'Очікує підтвердження' %}
+        <div class="alert alert-info mt-3">Замовлення очікує підтвердження від друкаря.</div>
+      {% elif order.status == 'У виконанні' %}
+        <div class="alert alert-success mt-3">Друкар прийняв замовлення. Виконання розпочато.</div>
+      {% elif order.status == 'Відхилено' %}
+        <div class="alert alert-danger mt-3">
+          Замовлення відхилене. Причина: <strong>{{ order.cancellation_reason }}</strong>
+        </div>
       {% endif %}
+    {% endif %}
+
+    {# Посилання на STL #}
+    {% if order %}
+      <div class="alert alert-info d-flex justify-content-between align-items-center">
+        <strong class="mb-0">STL-файл:</strong>
+        <a href="{{ url_for('static', filename='stl_files/' ~ order.stl_filename) }}"
+           class="btn btn-success" download>
+          Завантажити {{ order.stl_filename }}
+        </a>
+      </div>
     {% endif %}
   </div>
 </div>
+{# наприкінці offer_detail.html #}
+{% if role == 'customer' %}
+  <a href="{{ url_for('main.view_offers') }}"
+     class="btn btn-secondary">← Назад</a>
+{% else %}
+  <a href="{{ url_for('main.dashboard', role='contractor') }}"
+     class="btn btn-secondary">← Назад</a>
+{% endif %}
 {% endblock %}

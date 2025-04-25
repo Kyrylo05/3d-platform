@@ -11,7 +11,12 @@ main = Blueprint('main', __name__)
 # ------------------ Головна ------------------
 @main.route('/')
 def home():
-    return render_template('index.html')
+    stats = {
+        "customers": Customer.query.count(),
+        "contractors": Contractor.query.count(),
+        "offers": Offer.query.count()
+    }
+    return render_template('index.html', stats=stats)
 
 # ------------------ Реєстрація (обʼєднана) ------------------
 @main.route('/register', methods=['GET', 'POST'])
@@ -204,11 +209,18 @@ def view_offers():
 @login_required
 def offer_detail(offer_id):
     offer = Offer.query.get_or_404(offer_id)
-    role = session.get('role')
+    role  = session.get('role')
 
-    order = None
-    if role == 'contractor':
-        order = Order.query.filter_by(offer_id=offer_id).order_by(Order.timestamp.desc()).first()
+    if role == 'customer':
+        order = Order.query.filter_by(
+            offer_id=offer_id, customer_id=current_user.id
+        ).first()
+    elif role == 'contractor':
+        order = Order.query.filter_by(
+            offer_id=offer_id
+        ).order_by(Order.timestamp.desc()).first()
+    else:
+        order = None
 
     return render_template('offer_detail.html', offer=offer, role=role, order=order)
 
@@ -236,10 +248,14 @@ def create_order(offer_id):
         estimated_weight = 50.0  # заглушка
         estimated_price = estimated_weight * offer.price_per_gram
 
+        print('Адреса доставки:', request.form.get('delivery_info'))
+
+
         order = Order(
             stl_filename=filename,
             estimated_weight=estimated_weight,
             estimated_price=estimated_price,
+            delivery_info=request.form.get('delivery_info'),
             offer_id=offer.id,
             customer_id=current_user.id,
             contractor_id=offer.contractor.id
@@ -294,3 +310,32 @@ def view_profile(user_id):
     # якщо не знайшли, шукаємо customer
     user = Customer.query.get_or_404(user_id)
     return render_template('view_profile.html', user=user, role='customer')
+
+# ------------------ Прийняти замовлення ------------------
+@main.route('/order/<int:order_id>/accept', methods=['POST'])
+@login_required
+def accept_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+        return "Доступ заборонено", 403
+
+    order.status = "У виконанні"
+    db.session.commit()
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
+
+# ------------------ Відхилити замовлення ------------------
+@main.route('/order/<int:order_id>/reject', methods=['POST'])
+@login_required
+def reject_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+        return "Доступ заборонено", 403
+
+    reason = request.form.get('rejection_reason')
+    if not reason:
+        return "Потрібно вказати причину!", 400
+
+    order.status = "Відхилено"
+    order.cancellation_reason = reason
+    db.session.commit()
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id))

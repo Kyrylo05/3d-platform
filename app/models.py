@@ -46,3 +46,8 @@ class Order(db.Model):
     contractor_id = db.Column(db.Integer, db.ForeignKey('contractor.id'))
 
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_info = db.Column(db.String(300))
+    cancellation_reason = db.Column(db.String(500))
+    is_cancelled = db.Column(db.Boolean, default=False)
+
+

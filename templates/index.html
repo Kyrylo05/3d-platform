@@ -1,12 +1,70 @@
 {% extends "base.html" %}
-{% block title %}Головна{% endblock %}
+{% block title %}3D Платформа{% endblock %}
 
 {% block content %}
-<div class="jumbotron text-center">
-  <h1>3D Платформа</h1>
-  <p>Вітаємо! Оберіть роль і ввійдіть чи зареєструйтесь</p>
-  <hr>
-  <a href="/register?role=customer" class="btn btn-primary">Я Замовник</a>
-  <a href="/register?role=contractor" class="btn btn-info">Я Друкар</a>
-</div>
+<!-- hero -->
+<section class="jumbotron text-center bg-light">
+  <h1 class="display-4">3D Платформа</h1>
+  <p class="lead">З’єднуємо людей, яким потрібно щось надрукувати, із тими, хто друкує.</p>
+
+  <div class="mt-4 d-flex justify-content-center flex-wrap">
+    <a href="{{ url_for('main.login') }}?role=customer"
+       class="btn btn-outline-primary btn-lg mx-1 my-1">Увійти&nbsp;замовнику</a>
+  
+    <a href="{{ url_for('main.login') }}?role=contractor"
+       class="btn btn-outline-info btn-lg mx-1 my-1">Увійти&nbsp;друкарю</a>
+  
+    <a href="{{ url_for('main.register') }}?role=customer"
+       class="btn btn-primary btn-lg mx-1 my-1">Реєстрація&nbsp;замовника</a>
+  
+    <a href="{{ url_for('main.register') }}?role=contractor"
+       class="btn btn-info btn-lg mx-1 my-1">Реєстрація&nbsp;друкаря</a>
+  </div>
+  
+</section>
+
+<!-- статистика -->
+<section class="container my-5">
+  <div class="row text-center">
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm p-3">
+        <h2 class="mb-0">{{ stats.customers }}</h2>
+        <small>активних&nbsp;замовників</small>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm p-3">
+        <h2 class="mb-0">{{ stats.contractors }}</h2>
+        <small>перевірених&nbsp;друкарів</small>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card shadow-sm p-3">
+        <h2 class="mb-0">{{ stats.offers }}</h2>
+        <small>актуальних&nbsp;пропозицій</small>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- про нас -->
+<section class="bg-white py-5 border-top">
+  <div class="container">
+    <h3 class="text-center mb-4">Чому нам довіряють</h3>
+    <div class="row">
+      <div class="col-md-4 mb-3">
+        <h5>Прозорі ціни</h5>
+        <p class="mb-0">Кожна пропозиція містить чітку вартість за грам. Ніяких прихованих платежів.</p>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h5>Рейтинг виконавців</h5>
+        <p class="mb-0">Система відгуків допомагає обирати найкращих друкарів за якістю та швидкістю.</p>
+      </div>
+      <div class="col-md-4 mb-3">
+        <h5>Безпечні транзакції</h5>
+        <p class="mb-0">Ми працюємо через LiqPay у тестовому та бойовому режимах — ваші кошти у безпеці.</p>
+      </div>
+    </div>
+  </div>
+</section>
 {% endblock %}

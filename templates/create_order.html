@@ -8,16 +8,25 @@
   <p><strong>Пропозиція від {{ offer.contractor.company_name }} ({{ offer.material }})</strong></p>
   <p>Ціна за грам: {{ offer.price_per_gram }} грн</p>
 
-  <!-- Область завантаження файлу -->
+  <!-- Весь вміст має бути всередині <form> -->
   <form action="{{ url_for('main.create_order', offer_id=offer.id) }}" method="POST" enctype="multipart/form-data">
+    
+    <!-- Адреса доставки -->
     <div class="form-group">
-      <label for="stl_file">Перетягніть сюди STL-файл:</label>
+      <label for="delivery_info">Доставка (пошта, місто, відділення):</label>
+      <input type="text" id="delivery_info" name="delivery_info" class="form-control" placeholder="Нова Пошта, Львів, №15" required>
+    </div>
+
+    <!-- Область завантаження STL -->
+    <div class="form-group">
+      <label for="stl_file">STL-файл:</label>
       <div id="drop_zone"
            style="border: 3px dashed #007BFF; padding: 40px; text-align: center; cursor: pointer;">
         Перетягніть STL-файл сюди або натисніть для вибору
       </div>
       <input type="file" id="stl_file" name="stl_file" accept=".stl" hidden required>
     </div>
+
     <button type="submit" class="btn btn-success">Підтвердити</button>
   </form>
 </div>
@@ -48,5 +57,4 @@ fileInput.addEventListener('change', (e) => {
   dropZone.textContent = `Вибрано файл: ${e.target.files[0].name}`;
 });
 </script>
-
 {% endblock %}
