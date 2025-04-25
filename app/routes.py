@@ -339,3 +339,34 @@ def reject_order(order_id):
     order.cancellation_reason = reason
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
+# ------------------ Завершити друк ------------------
+@main.route('/order/<int:order_id>/finish', methods=['POST'])
+@login_required
+def finish_print(order_id):
+    order = Order.query.get_or_404(order_id)
+    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+        return "Доступ заборонено", 403
+
+    # необовʼязкове проміжне фото
+    file = request.files.get('progress_img')
+    if file and file.filename:
+        fname = f'order_{order.id}_progress.jpg'
+        path  = os.path.join('app', 'static', 'examples', fname)
+        file.save(path)
+        order.progress_image = fname
+
+    order.status = "Друк завершено"
+    db.session.commit()
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
+
+# ------------------ Відправити поштою ------------------
+@main.route('/order/<int:order_id>/ship', methods=['POST'])
+@login_required
+def ship_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+        return "Доступ заборонено", 403
+
+    order.status = "Відправлено"
+    db.session.commit()
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id))

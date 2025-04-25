@@ -37,6 +37,7 @@ class Offer(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stl_filename = db.Column(db.String(255), nullable=False)
+    progress_image = db.Column(db.String(255))          # 🆕 фото готової деталі
     estimated_weight = db.Column(db.Float)
     estimated_price = db.Column(db.Float)
     status = db.Column(db.String(50), default='Очікує підтвердження')
@@ -49,5 +50,3 @@ class Order(db.Model):
     delivery_info = db.Column(db.String(300))
     cancellation_reason = db.Column(db.String(500))
     is_cancelled = db.Column(db.Boolean, default=False)
-
-
