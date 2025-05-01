@@ -1,7 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
+from flask import jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from app.models import db, Customer, Contractor, Offer, Order, ChatMessage
+
 import os
 
 from app.models import db, Customer, Contractor, Offer, Order
@@ -84,17 +87,35 @@ def login():
     return render_template('login.html', role=role)
 
 # ------------------ Кабінет ------------------
+# ------------------ Кабінет ------------------
 @main.route('/dashboard/<role>')
 @login_required
 def dashboard(role):
     if role == 'contractor':
         offers = Offer.query.filter_by(contractor_id=current_user.id).all()
+
+        # показуємо лише ті замовлення, де вже є хоч одне повідомлення
+        chats = (Order.query
+                 .filter_by(contractor_id=current_user.id)
+                 .filter(Order.messages.any())        # ← головне фільтрування
+                 .order_by(Order.timestamp.desc())
+                 .all())
+
         from datetime import datetime
-        return render_template('dashboard.html', user=current_user, role=role, offers=offers, now=datetime.utcnow())
+        return render_template(
+            'dashboard.html',
+            user=current_user,
+            role=role,
+            offers=offers,
+            chats=chats,
+            now=datetime.utcnow()
+        )
+
     elif role == 'customer':
         return redirect(url_for('main.view_offers'))
-    else:
-        return "Невідома роль", 404
+
+    return "Невідома роль", 404
+
 
 # ------------------ Вихід ------------------
 @main.route('/logout')
@@ -201,8 +222,11 @@ def view_offers():
         return "Доступ лише для замовників", 403
 
     offers = Offer.query.all()
-    files = set(os.listdir('app/static/examples'))  # читаємо всі файли
-    return render_template('offers_list.html', offers=offers, static_files=files)
+    files  = set(os.listdir('app/static/examples'))
+    return render_template('offers_list.html',
+                           offers=offers,
+                           static_files=files)
+
 
 # ------------------ Детальна сторінка пропозиції ------------------
 @main.route('/offer/<int:offer_id>')
@@ -211,18 +235,58 @@ def offer_detail(offer_id):
     offer = Offer.query.get_or_404(offer_id)
     role  = session.get('role')
 
-    if role == 'customer':
-        order = Order.query.filter_by(
-            offer_id=offer_id, customer_id=current_user.id
-        ).first()
-    elif role == 'contractor':
-        order = Order.query.filter_by(
-            offer_id=offer_id
-        ).order_by(Order.timestamp.desc()).first()
-    else:
-        order = None
+    # якщо в URL передали конкретний order (друкар відкрив чат-посилання)
+    order_id = request.args.get('order', type=int)
+    order    = None
 
-    return render_template('offer_detail.html', offer=offer, role=role, order=order)
+    # ───── клієнт ────────────────────────────────────────────────
+    if role == 'customer':
+        order = (Order.query
+                 .filter_by(offer_id=offer_id, customer_id=current_user.id)
+                 .first())
+
+        if order is None:                     # створюємо «Draft» лише клієнту
+            order = Order(
+                stl_filename='__draft__.stl',
+                estimated_weight=0,
+                estimated_price=0,
+                status='Draft',
+                offer_id=offer_id,
+                customer_id=current_user.id,
+                contractor_id=offer.contractor.id
+            )
+            db.session.add(order)
+            db.session.commit()
+
+    # ───── друкар ───────────────────────────────────────────────
+    else:  # contractor
+        if order_id:                          # 👉 прийшли з “Відкрити чат”
+            order = Order.query.get_or_404(order_id)
+
+            # захист: чужий order або не цієї пропозиції
+            if order.contractor_id != current_user.id or order.offer_id != offer_id:
+                return "Доступ заборонено", 403
+
+        # якщо конкретний order не задано або не пройшов перевірку
+        if order is None:
+            # 1) шукаємо замовлення з уже існуючим чатом
+            order = (Order.query
+                     .filter_by(offer_id=offer_id)
+                     .filter(Order.messages.any())
+                     .order_by(Order.timestamp.desc())
+                     .first())
+
+        # 2) якщо чатів зовсім нема — беремо найновіший order (може бути Draft)
+        if order is None:
+            order = (Order.query
+                     .filter_by(offer_id=offer_id)
+                     .order_by(Order.timestamp.desc())
+                     .first())
+
+    return render_template('offer_detail.html',
+                           offer=offer,
+                           role=role,
+                           order=order)
 
 # ------------------ Створення замовлення ------------------
 @main.route('/order/create/<int:offer_id>', methods=['GET', 'POST'])
@@ -369,4 +433,60 @@ def ship_order(order_id):
 
     order.status = "Відправлено"
     db.session.commit()
-    return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id)) 
+
+# ------------------ CHAT ------------------
+def _allowed(order):
+    return ((session['role']=='customer'   and order.customer_id==current_user.id) or
+            (session['role']=='contractor' and order.contractor_id==current_user.id))
+
+# GET усі повідомлення
+@main.route('/order/<int:oid>/chat', methods=['GET'])
+@login_required
+def chat_messages(oid):
+    order = Order.query.get_or_404(oid)
+    if not _allowed(order):
+        return '', 403
+
+    msgs = (ChatMessage.query
+            .filter_by(order_id=oid)
+            .order_by(ChatMessage.created_at)
+            .all())
+
+    return jsonify([{
+        "mine":  (m.sender_id==current_user.id and m.sender_role==session['role']),
+        "role":  m.sender_role,
+        "text":  m.text,
+        "time":  m.created_at.strftime('%H:%M')
+    } for m in msgs])
+
+# POST нове повідомлення
+@main.route('/order/<int:oid>/chat', methods=['POST'])
+@login_required
+def chat_send(oid):
+    order = Order.query.get_or_404(oid)
+    if not _allowed(order):
+        return '', 403
+
+    # перше повідомлення може надіслати тільки customer
+    first = ChatMessage.query.filter_by(order_id=oid).first() is None
+    if first and session['role'] != 'customer':
+        return jsonify({"error": "Лише замовник може почати чат"}), 403
+
+    txt = request.form.get('text','').strip()
+    if not txt:
+        return '', 400
+
+    m = ChatMessage(order_id=oid,
+                    sender_id=current_user.id,
+                    sender_role=session['role'],
+                    text=txt)
+    db.session.add(m)
+    db.session.commit()
+
+    return jsonify({
+        "mine": True,
+        "role": m.sender_role,
+        "text": m.text,
+        "time": m.created_at.strftime('%H:%M')
+    }), 201

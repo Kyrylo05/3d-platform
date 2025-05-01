@@ -3,10 +3,11 @@
 
 {% block content %}
 <div class="card mb-5">
-  <!-- ── Заголовок ───────────────────────────────────────── -->
+
+  {# ───── Заголовок ───── #}
   <div class="card-header d-flex align-items-center">
     <img src="{{ url_for('static', filename='uploads/' ~ offer.contractor.profile_image) }}"
-         class="rounded-circle mr-3" width="80" height="80" style="object-fit:cover" alt="Фото профілю">
+         class="rounded-circle mr-3" width="80" height="80" style="object-fit:cover">
     <div>
       <h4 class="mb-0">{{ offer.contractor.company_name }}</h4>
       <small>Рейтинг: {{ "%.1f"|format(offer.contractor.rating) }}</small>
@@ -14,117 +15,197 @@
   </div>
 
   <div class="card-body">
-    <!-- ── Параметри пропозиції ───────────────────────────── -->
-    <h5 class="text-primary">Матеріал: {{ offer.material }}</h5>
-    <p><strong>Товщина шару:</strong> {{ offer.layer_height }} мм</p>
-    <p><strong>Ціна за грам:</strong> {{ offer.price_per_gram }} ₴</p>
-    <p><strong>Розміри:</strong> {{ offer.min_size }} – {{ offer.max_size }}</p>
 
-    <!-- ── Слайдер фото ──────────────────────────────────── -->
-    <div id="carouselDetail" class="carousel slide my-4" data-ride="carousel">
+    {# ───── Параметри пропозиції ───── #}
+    <h5 class="text-primary">Матеріал: {{ offer.material }}</h5>
+    <p><b>Товщина шару:</b> {{ offer.layer_height }} мм</p>
+    <p><b>Ціна за грам:</b> {{ offer.price_per_gram }} ₴</p>
+    <p><b>Розміри:</b> {{ offer.min_size }} – {{ offer.max_size }}</p>
+
+    {# ───── Слайдер фото ───── #}
+    <div id="carousel{{ offer.id }}" class="carousel slide my-4" data-ride="carousel">
       <div class="carousel-inner">
         {% for i in range(1,4) %}
-        <div class="carousel-item {% if i==1 %}active{% endif %}">
+        <div class="carousel-item {{ 'active' if i==1 }}">
           <img src="{{ url_for('static', filename='examples/offer_' ~ offer.id ~ '_example_' ~ i ~ '.jpg') }}"
-               class="d-block w-100" style="height:220px;object-fit:cover" alt="Зразок {{ i }}">
+               class="d-block w-100" style="height:220px;object-fit:cover">
         </div>
         {% endfor %}
       </div>
-      <a class="carousel-control-prev" href="#carouselDetail" role="button" data-slide="prev">
+      <a class="carousel-control-prev" href="#carousel{{ offer.id }}" role="button" data-slide="prev">
         <span class="carousel-control-prev-icon"></span>
       </a>
-      <a class="carousel-control-next" href="#carouselDetail" role="button" data-slide="next">
+      <a class="carousel-control-next" href="#carousel{{ offer.id }}" role="button" data-slide="next">
         <span class="carousel-control-next-icon"></span>
       </a>
     </div>
 
-    <!-- ── Кнопка замовлення для клієнта ─────────────────── -->
-    {% if role=='customer' and not order %}
-      <a href="{{ url_for('main.create_order', offer_id=offer.id) }}"
-         class="btn btn-primary btn-block mb-3">Замовити друк</a>
+    {# ───── Кнопка «Замовити» (поки клієнт не завантажив STL) ───── #}
+    {% if role=='customer' and order and order.stl_filename == '__draft__.stl' %}
+      <a class="btn btn-primary btn-block mb-3"
+         href="{{ url_for('main.create_order', offer_id=offer.id) }}">
+         Замовити друк
+      </a>
     {% endif %}
 
-    <!-- ── Дії для друкаря ───────────────────────────────── -->
+    {# ───── Дії друкаря ───── #}
     {% if role=='contractor' and order %}
-      {% if order.status=='Очікує підтвердження' %}
-        <!-- Прийняти / Відхилити -->
-        <form action="{{ url_for('main.accept_order', order_id=order.id) }}" method="POST" class="mb-2">
+      {% if order.status == 'Очікує підтвердження' %}
+        <form class="mb-2" method="POST"
+              action="{{ url_for('main.accept_order', order_id=order.id) }}">
           <button class="btn btn-success btn-block">Прийняти замовлення</button>
         </form>
 
-        <form action="{{ url_for('main.reject_order', order_id=order.id) }}" method="POST">
+        <form method="POST"
+              action="{{ url_for('main.reject_order', order_id=order.id) }}">
           <div class="form-group">
-            <label for="rejection_reason">Причина відмови:</label>
-            <textarea id="rejection_reason" name="rejection_reason" class="form-control" required></textarea>
+            <label for="rejection_reason">Причина відмови</label>
+            <textarea id="rejection_reason" name="rejection_reason"
+                      class="form-control" required></textarea>
           </div>
           <button class="btn btn-danger btn-block">Відмовити</button>
         </form>
 
-      {% elif order.status=='У виконанні' %}
-        <!-- Завершити друк + фото -->
-        <form action="{{ url_for('main.finish_print', order_id=order.id) }}"
-              method="POST" enctype="multipart/form-data" class="mb-3">
+      {% elif order.status == 'У виконанні' %}
+        <form class="mb-3" method="POST"
+              action="{{ url_for('main.finish_print', order_id=order.id) }}"
+              enctype="multipart/form-data">
           <div class="form-group">
-            <label>Фото готової деталі (опційно):</label>
+            <label>Фото готової деталі (опц.)</label>
             <input type="file" name="progress_img" accept="image/*" class="form-control">
           </div>
           <button class="btn btn-warning btn-block">Друк завершено</button>
         </form>
 
-      {% elif order.status=='Друк завершено' %}
-        <!-- Відправити поштою -->
-        <form action="{{ url_for('main.ship_order', order_id=order.id) }}" method="POST">
+      {% elif order.status == 'Друк завершено' %}
+        <form method="POST"
+              action="{{ url_for('main.ship_order', order_id=order.id) }}">
           <button class="btn btn-success btn-block">Відправлено поштою</button>
         </form>
       {% endif %}
     {% endif %}
 
-    <!-- ── Повідомлення для клієнта ───────────────────────── -->
+    {# ───── Інформаційні статуси для клієнта ───── #}
     {% if role=='customer' and order %}
-      {% if order.status=='Очікує підтвердження' %}
-        <div class="alert alert-info mt-3">Замовлення очікує підтвердження друкаря.</div>
-
-      {% elif order.status=='У виконанні' %}
-        <div class="alert alert-warning mt-3">Друк розпочато, чекайте.</div>
-
-      {% elif order.status=='Друк завершено' %}
+      {% if order.status == 'Очікує підтвердження' %}
+        <div class="alert alert-info mt-3">Очікує підтвердження друкаря.</div>
+      {% elif order.status == 'У виконанні' %}
+        <div class="alert alert-warning mt-3">Друк розпочато.</div>
+      {% elif order.status == 'Друк завершено' %}
         <div class="alert alert-success mt-3">
-          Друк завершено. Незабаром відправлення.<br>
+          Друк завершено.
           {% if order.progress_image %}
-            <img src="{{ url_for('static', filename='examples/' ~ order.progress_image) }}"
-                 class="img-fluid mt-2">
+            <br><img class="img-fluid mt-2"
+                     src="{{ url_for('static', filename='examples/' ~ order.progress_image) }}">
           {% endif %}
         </div>
-
-      {% elif order.status=='Відправлено' %}
-        <div class="alert alert-success mt-3">
-          Ваш виріб відправлено поштою. Слідкуйте за SMS або у додатку пошти.
-        </div>
-
-      {% elif order.status=='Відхилено' %}
+      {% elif order.status == 'Відправлено' %}
+        <div class="alert alert-success mt-3">Виріб відправлено.</div>
+      {% elif order.status == 'Відхилено' %}
         <div class="alert alert-danger mt-3">
-          Замовлення відхилено. Причина: <strong>{{ order.cancellation_reason }}</strong>
+          Відхилено: <b>{{ order.cancellation_reason }}</b>
         </div>
       {% endif %}
     {% endif %}
 
-    <!-- ── Посилання на STL ───────────────────────────────── -->
-    {% if order %}
+    {# ───── STL-файл (лише коли справді є) ───── #}
+    {% if order and order.stl_filename != '__draft__.stl' %}
       <div class="alert alert-info d-flex justify-content-between align-items-center">
-        <strong class="mb-0">STL-файл:</strong>
-        <a href="{{ url_for('static', filename='stl_files/' ~ order.stl_filename) }}"
-           class="btn btn-success" download>
-          Завантажити {{ order.stl_filename }}
+        <b class="mb-0">STL-файл:</b>
+        <a class="btn btn-success" download
+           href="{{ url_for('static',
+                            filename='stl_files/' ~ order.stl_filename) }}">
+           Завантажити {{ order.stl_filename }}
         </a>
       </div>
     {% endif %}
+
+    {# ───── ЧАТ ───── #}
+    {% set show_chat = role=='customer' or (role=='contractor' and order.messages|length>0) %}
+    {% set can_write = role=='customer' or (role=='contractor' and order.messages|length>0) %}
+
+    {% if show_chat %}
+      <h5 class="mt-4">Чат</h5>
+
+      <div id="chat-box" class="border p-2 rounded mb-2"
+           style="max-height:300px;overflow-y:auto;font-size:.9rem;"></div>
+
+      {% if can_write %}
+        <form id="chat-form" class="input-group">
+          <input id="chat-input" name="text" class="form-control"
+                 placeholder="Написати повідомлення…">
+          <div class="input-group-append">
+            <button class="btn btn-primary">▶</button>
+          </div>
+        </form>
+      {% endif %}
+    {% endif %}
+
+    {# ───── Кнопка «Назад» ───── #}
+    {% if role=='customer' %}
+      <a class="btn btn-secondary"
+         href="{{ url_for('main.view_offers') }}">← Назад</a>
+    {% else %}
+      <a class="btn btn-secondary"
+         href="{{ url_for('main.dashboard', role='contractor') }}">← Назад</a>
+    {% endif %}
+
   </div>
 </div>
+{% endblock %}
 
-<!-- ── Кнопка «Назад» ─────────────────────────────────────── -->
-{% if role=='customer' %}
-  <a href="{{ url_for('main.view_offers') }}" class="btn btn-secondary">← Назад</a>
-{% else %}
-  <a href="{{ url_for('main.dashboard', role='contractor') }}" class="btn btn-secondary">← Назад</a>
+{% block scripts %}
+{{ super() }}
+{% if order %}
+<script>
+const box  = document.getElementById('chat-box');
+const form = document.getElementById('chat-form');
+const inp  = document.getElementById('chat-input');
+const url  = "{{ url_for('main.chat_messages', oid=order.id) }}";
+
+/* бульбашка */
+function bubble(m){
+  const side  = m.mine ? 'justify-content-end' : 'justify-content-start';
+  const badge = m.mine ? 'primary' : 'secondary';
+  return `
+    <div class="d-flex w-100 ${side} mb-1">
+      <div>
+        <span class="badge badge-${badge}">${m.role}</span>
+        <span class="border rounded px-2 py-1 ml-1 d-inline-block">${m.text}</span>
+        <small class="text-muted ml-1" style="font-size:.75rem">${m.time}</small>
+      </div>
+    </div>`;
+}
+
+/* історія */
+function load(){
+  fetch(url).then(r=>r.json()).then(msg=>{
+    box.innerHTML = msg.map(bubble).join('');
+    box.scrollTop = box.scrollHeight;
+  });
+}
+load(); setInterval(load, 3000);
+
+/* надсилання */
+if(form){
+  form.addEventListener('submit', e=>{
+    e.preventDefault();
+    const fd = new FormData(form);
+    fetch(url,{method:'POST',body:fd})
+      .then(r=>r.json())
+      .then(m=>{
+        box.insertAdjacentHTML('beforeend', bubble(m));
+        box.scrollTop = box.scrollHeight;
+        inp.value = '';
+      });
+  });
+  inp.addEventListener('keydown', e=>{
+    if(e.key==='Enter'&&!e.shiftKey){
+      e.preventDefault();
+      form.requestSubmit();
+    }
+  });
+}
+</script>
 {% endif %}
 {% endblock %}

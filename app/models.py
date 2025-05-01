@@ -34,6 +34,7 @@ class Offer(db.Model):
     contractor_id = db.Column(db.Integer, db.ForeignKey('contractor.id'), nullable=False)
     orders = db.relationship('Order', backref='offer', lazy=True)
 
+
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stl_filename = db.Column(db.String(255), nullable=False)
@@ -50,3 +51,12 @@ class Order(db.Model):
     delivery_info = db.Column(db.String(300))
     cancellation_reason = db.Column(db.String(500))
     is_cancelled = db.Column(db.Boolean, default=False)
+    messages = db.relationship('ChatMessage', backref='order', lazy=True)  
+
+class ChatMessage(db.Model):
+    id          = db.Column(db.Integer, primary_key=True)
+    order_id    = db.Column(db.Integer, db.ForeignKey('order.id'))  # ✅
+    sender_id   = db.Column(db.Integer)
+    sender_role = db.Column(db.String(20))   # 'customer' | 'contractor'
+    text        = db.Column(db.Text, nullable=False)
+    created_at  = db.Column(db.DateTime, default=datetime.utcnow)
