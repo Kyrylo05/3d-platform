@@ -66,24 +66,24 @@
 
 ## 🚀 Як запустити
 ```bash
-# 1. Клонувати
-git clone https://github.com/Kyrylo05/3d-platform.git
-cd 3d-platform
+# 1. Клонувати репозиторій
+git clone https://github.com/Kyrylo05/3d-platform.git && cd 3d-platform
 
 # 2. Створити віртуальне середовище
-python3 -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+python3 -m venv venv && source venv/bin/activate  # Windows: venv\Scripts\activate
 
 # 3. Встановити залежності
 pip install -r requirements.txt
 
 # 4. Ініціалізувати базу
-flask db init
-flask db migrate -m "init"
-flask db upgrade
+flask db init && flask db migrate -m "init" && flask db upgrade
 
-# 5. Запустити
-flask run
+# 5. Створенні пакунку для завантажень
+mkdir -p app/static/uploads
+
+# 6. Запустити через python
+python3 app.py
+
 
 ``` 
 🖥️ Перейдіть у браузері на:
