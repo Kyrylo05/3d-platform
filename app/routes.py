@@ -1,13 +1,10 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session
-from flask import jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify, current_app
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from app.models import db, Customer, Contractor, Offer, Order, ChatMessage
-
 import os
-
-from app.models import db, Customer, Contractor, Offer, Order
+from uuid import uuid4
 
 main = Blueprint('main', __name__)
 
@@ -46,11 +43,18 @@ def register():
         filename = 'default-avatar.png'
 
         # Якщо додали фото
-        if file and file.filename != '':
-            filename = secure_filename(file.filename)
-            save_path = os.path.join('app', 'static', 'uploads', filename)
+        if file and file.filename:
+            raw_filename = secure_filename(file.filename)
+            # папка за роллю
+            role_folder = 'customers' if role == 'customer' else 'contractors'
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', role_folder)
+            os.makedirs(upload_dir, exist_ok=True)
+            unique_name = f"{uuid4().hex}_{raw_filename}"
+            save_path = os.path.join(upload_dir, unique_name)
             file.save(save_path)
+            filename = f"{role_folder}/{unique_name}"
 
+        # Створюємо користувача
         if role == 'customer':
             new_user = Customer(full_name=name, email=email, password=hashed_password, profile_image=filename)
         else:
@@ -66,7 +70,7 @@ def register():
 # ------------------ Вхід (обʼєднаний) ------------------
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    role = request.args.get('role')  # ?role=customer | ?role=contractor
+    role = request.args.get('role')
     if not role or role not in ['customer', 'contractor']:
         return "Потрібен ?role=customer чи ?role=contractor", 400
 
@@ -87,35 +91,21 @@ def login():
     return render_template('login.html', role=role)
 
 # ------------------ Кабінет ------------------
-# ------------------ Кабінет ------------------
 @main.route('/dashboard/<role>')
 @login_required
 def dashboard(role):
     if role == 'contractor':
         offers = Offer.query.filter_by(contractor_id=current_user.id).all()
-
-        # показуємо лише ті замовлення, де вже є хоч одне повідомлення
         chats = (Order.query
                  .filter_by(contractor_id=current_user.id)
-                 .filter(Order.messages.any())        # ← головне фільтрування
+                 .filter(Order.messages.any())
                  .order_by(Order.timestamp.desc())
                  .all())
-
         from datetime import datetime
-        return render_template(
-            'dashboard.html',
-            user=current_user,
-            role=role,
-            offers=offers,
-            chats=chats,
-            now=datetime.utcnow()
-        )
-
+        return render_template('dashboard.html', user=current_user, role=role, offers=offers, chats=chats, now=datetime.utcnow())
     elif role == 'customer':
         return redirect(url_for('main.view_offers'))
-
     return "Невідома роль", 404
-
 
 # ------------------ Вихід ------------------
 @main.route('/logout')
@@ -124,6 +114,39 @@ def logout():
     logout_user()
     session.pop('role', None)
     return redirect(url_for('main.home'))
+
+# ------------------ Редагування профілю ------------------
+@main.route('/profile/<role>', methods=['GET', 'POST'])
+@login_required
+def edit_profile(role):
+    if session.get('role') != role:
+        return "Доступ заборонено", 403
+
+    user = Customer.query.get(current_user.id) if role == 'customer' else Contractor.query.get(current_user.id)
+
+    if request.method == 'POST':
+        new_name = request.form.get('name')
+        file = request.files.get('profile_image')
+
+        if role == 'customer':
+            user.full_name = new_name
+        else:
+            user.company_name = new_name
+
+        if file and file.filename:
+            raw_filename = secure_filename(file.filename)
+            role_folder = 'customers' if role == 'customer' else 'contractors'
+            upload_dir = os.path.join(current_app.root_path, 'static', 'uploads', role_folder)
+            os.makedirs(upload_dir, exist_ok=True)
+            unique_name = f"{current_user.id}_{uuid4().hex[:8]}_{raw_filename}"
+            save_path = os.path.join(upload_dir, unique_name)
+            file.save(save_path)
+            user.profile_image = f"{role_folder}/{unique_name}"
+
+        db.session.commit()
+        return redirect(url_for('main.dashboard', role=role))
+
+    return render_template('edit_profile.html', user=user, role=role)
 
 # ------------------ Створення пропозиції ------------------
 @main.route('/contractor/create_offer', methods=['GET', 'POST'])
@@ -330,38 +353,6 @@ def create_order(offer_id):
         return redirect(url_for('main.dashboard', role='customer'))
 
     return render_template('create_order.html', offer=offer)
-
-# ------------------ Редагування профілю ------------------
-@main.route('/profile/<role>', methods=['GET', 'POST'])
-@login_required
-def edit_profile(role):
-    if session.get('role') != role:
-        return "Доступ заборонено", 403
-
-    if role == 'customer':
-        user = Customer.query.get(current_user.id)
-    else:
-        user = Contractor.query.get(current_user.id)
-
-    if request.method == 'POST':
-        new_name = request.form.get('name')
-        file = request.files.get('profile_image')
-
-        if role == 'customer':
-            user.full_name = new_name
-        else:
-            user.company_name = new_name
-
-        if file and file.filename:
-            filename = secure_filename(file.filename)
-            save_path = os.path.join('app', 'static', 'uploads', filename)
-            file.save(save_path)
-            user.profile_image = filename
-
-        db.session.commit()
-        return redirect(url_for('main.dashboard', role=role))
-
-    return render_template('edit_profile.html', user=user, role=role)
 
 # ------------------ Перегляд чужого профілю ------------------
 @main.route('/profile/view/<int:user_id>')
