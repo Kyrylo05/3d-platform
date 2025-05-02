@@ -4,7 +4,7 @@ from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from app.models import db, Customer, Contractor, Offer, Order, ChatMessage
-
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 import os
 
 from app.models import db, Customer, Contractor, Offer, Order
@@ -86,7 +86,6 @@ def login():
 
     return render_template('login.html', role=role)
 
-# ------------------ Кабінет ------------------
 # ------------------ Кабінет ------------------
 @main.route('/dashboard/<role>')
 @login_required
@@ -411,13 +410,21 @@ def finish_print(order_id):
     if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
         return "Доступ заборонено", 403
 
-    # необовʼязкове проміжне фото
     file = request.files.get('progress_img')
     if file and file.filename:
         fname = f'order_{order.id}_progress.jpg'
         path  = os.path.join('app', 'static', 'examples', fname)
         file.save(path)
         order.progress_image = fname
+
+        # 🆕 додаємо повідомлення‑картинку в чат
+        img_msg = ChatMessage(
+            order_id    = order.id,
+            sender_id   = current_user.id,
+            sender_role = 'contractor',
+            text        = '[img]' + fname        # спец‑тег
+        )
+        db.session.add(img_msg)
 
     order.status = "Друк завершено"
     db.session.commit()
@@ -454,9 +461,11 @@ def chat_messages(oid):
             .all())
 
     return jsonify([{
-        "mine":  (m.sender_id==current_user.id and m.sender_role==session['role']),
+        "mine":  (m.sender_id == current_user.id and m.sender_role == session['role']),
         "role":  m.sender_role,
         "text":  m.text,
+        "img":   (m.text.startswith('[img]') and
+                  url_for('static', filename='examples/' + m.text[5:])) or None,
         "time":  m.created_at.strftime('%H:%M')
     } for m in msgs])
 
@@ -490,3 +499,4 @@ def chat_send(oid):
         "text": m.text,
         "time": m.created_at.strftime('%H:%M')
     }), 201
+

@@ -167,11 +167,14 @@ const url  = "{{ url_for('main.chat_messages', oid=order.id) }}";
 function bubble(m){
   const side  = m.mine ? 'justify-content-end' : 'justify-content-start';
   const badge = m.mine ? 'primary' : 'secondary';
+  const body  = m.img
+        ? `<img src="${m.img}" style="max-width:200px;border-radius:6px">`
+        : m.text;
   return `
     <div class="d-flex w-100 ${side} mb-1">
       <div>
         <span class="badge badge-${badge}">${m.role}</span>
-        <span class="border rounded px-2 py-1 ml-1 d-inline-block">${m.text}</span>
+        <span class="border rounded px-2 py-1 ml-1 d-inline-block">${body}</span>
         <small class="text-muted ml-1" style="font-size:.75rem">${m.time}</small>
       </div>
     </div>`;
@@ -208,4 +211,5 @@ if(form){
 }
 </script>
 {% endif %}
+
 {% endblock %}
