@@ -14,7 +14,7 @@ def file_exists_filter(path):
 
 def create_app():
     app = Flask(__name__, template_folder=os.path.abspath('templates'))
-    app.config['SECRET_KEY'] = 'your-secret-key'
+    app.config['SECRET_KEY'] = 's3cR3t_45Jk!mQp90z'
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 

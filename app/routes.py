@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from app.models import db, Customer, Contractor, Offer, Order, ChatMessage
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from sqlalchemy import and_
 import os
 
 from app.models import db, Customer, Contractor, Offer, Order
@@ -66,7 +67,7 @@ def register():
 # ------------------ Вхід (обʼєднаний) ------------------
 @main.route('/login', methods=['GET', 'POST'])
 def login():
-    role = request.args.get('role')  # ?role=customer | ?role=contractor
+    role = request.args.get('role') or session.get('role')
     if not role or role not in ['customer', 'contractor']:
         return "Потрібен ?role=customer чи ?role=contractor", 400
 
@@ -234,17 +235,24 @@ def offer_detail(offer_id):
     offer = Offer.query.get_or_404(offer_id)
     role  = session.get('role')
 
-    # якщо в URL передали конкретний order (друкар відкрив чат-посилання)
-    order_id = request.args.get('order', type=int)
-    order    = None
+    order_id     = request.args.get('order', type=int)
+    order        = None
+    chat_orders  = []
 
-    # ───── клієнт ────────────────────────────────────────────────
     if role == 'customer':
         order = (Order.query
                  .filter_by(offer_id=offer_id, customer_id=current_user.id)
+                 .filter(Order.messages.any())
+                 .order_by(Order.timestamp.desc())
                  .first())
 
-        if order is None:                     # створюємо «Draft» лише клієнту
+        if order is None:
+            order = (Order.query
+                     .filter_by(offer_id=offer_id, customer_id=current_user.id)
+                     .order_by(Order.timestamp.desc())
+                     .first())
+
+        if order is None:
             order = Order(
                 stl_filename='__draft__.stl',
                 estimated_weight=0,
@@ -256,36 +264,47 @@ def offer_detail(offer_id):
             )
             db.session.add(order)
             db.session.commit()
+            db.session.refresh(order)  # 🧠 важливо: завантажити звʼязки order.messages
 
-    # ───── друкар ───────────────────────────────────────────────
-    else:  # contractor
-        if order_id:                          # 👉 прийшли з “Відкрити чат”
+
+    elif role == 'contractor':
+        chat_orders = (Order.query
+                       .join(ChatMessage)
+                       .filter(and_(Order.offer_id == offer_id,
+                                    ChatMessage.sender_role == 'customer'))
+                       .group_by(Order.id)
+                       .order_by(Order.timestamp.desc())
+                       .all())
+
+        if order_id:
             order = Order.query.get_or_404(order_id)
-
-            # захист: чужий order або не цієї пропозиції
             if order.contractor_id != current_user.id or order.offer_id != offer_id:
                 return "Доступ заборонено", 403
+        else:
+            order = chat_orders[0] if chat_orders else None
 
-        # якщо конкретний order не задано або не пройшов перевірку
-        if order is None:
-            # 1) шукаємо замовлення з уже існуючим чатом
-            order = (Order.query
-                     .filter_by(offer_id=offer_id)
-                     .filter(Order.messages.any())
-                     .order_by(Order.timestamp.desc())
-                     .first())
+        if order and order not in chat_orders:
+            chat_orders.insert(0, order)
+    else:
+        return "Невідома роль", 403
 
-        # 2) якщо чатів зовсім нема — беремо найновіший order (може бути Draft)
-        if order is None:
-            order = (Order.query
-                     .filter_by(offer_id=offer_id)
-                     .order_by(Order.timestamp.desc())
-                     .first())
+    chat_cnt = len(chat_orders) if role == 'contractor' else 1
+    show_chat = (role == 'customer') or chat_cnt > 0
 
-    return render_template('offer_detail.html',
-                           offer=offer,
-                           role=role,
-                           order=order)
+    # 🧠 Головна логіка: чи показувати чат (для шаблону)
+    customer_msgs_exist = any(m.sender_role == 'customer' for m in order.messages) if order else False
+    can_chat = (role == 'customer') or (role == 'contractor' and customer_msgs_exist)
+
+    return render_template(
+        'offer_detail.html',
+        offer     = offer,
+        role      = role,
+        order     = order,
+        chats     = chat_orders if role == 'contractor' else [],
+        chat_cnt  = chat_cnt,
+        show_chat = show_chat,
+        can_chat  = can_chat  # 🆕 головна змінна
+    )
 
 # ------------------ Створення замовлення ------------------
 @main.route('/order/create/<int:offer_id>', methods=['GET', 'POST'])
@@ -412,10 +431,13 @@ def finish_print(order_id):
 
     file = request.files.get('progress_img')
     if file and file.filename:
+        examples_path = os.path.join('app', 'static', 'examples')
+        os.makedirs(examples_path, exist_ok=True)          # ← гарантуємо директорію
+
         fname = f'order_{order.id}_progress.jpg'
-        path  = os.path.join('app', 'static', 'examples', fname)
-        file.save(path)
+        file.save(os.path.join(examples_path, fname))
         order.progress_image = fname
+
 
         # 🆕 додаємо повідомлення‑картинку в чат
         img_msg = ChatMessage(
