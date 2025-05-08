@@ -69,3 +69,5 @@ app/static/stl_files/
 # Flask instance
 instance/
 
+
+__pycache__/
