@@ -2,69 +2,78 @@
 {% block title %}3D Платформа{% endblock %}
 
 {% block content %}
-<!-- hero -->
-<section class="jumbotron text-center bg-light">
-  <h1 class="display-4">3D Платформа</h1>
-  <p class="lead">З’єднуємо людей, яким потрібно щось надрукувати, із тими, хто друкує.</p>
-
-  <div class="mt-4 d-flex justify-content-center flex-wrap">
-    <a href="{{ url_for('main.login') }}?role=customer"
-       class="btn btn-outline-primary btn-lg mx-1 my-1">Увійти&nbsp;замовнику</a>
-  
-    <a href="{{ url_for('main.login') }}?role=contractor"
-       class="btn btn-outline-info btn-lg mx-1 my-1">Увійти&nbsp;друкарю</a>
-  
-    <a href="{{ url_for('main.register') }}?role=customer"
-       class="btn btn-primary btn-lg mx-1 my-1">Реєстрація&nbsp;замовника</a>
-  
-    <a href="{{ url_for('main.register') }}?role=contractor"
-       class="btn btn-info btn-lg mx-1 my-1">Реєстрація&nbsp;друкаря</a>
-  </div>
-  
-</section>
-
-<!-- статистика -->
-<section class="container my-5">
-  <div class="row text-center">
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm p-3">
-        <h2 class="mb-0">{{ stats.customers }}</h2>
-        <small>активних&nbsp;замовників</small>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm p-3">
-        <h2 class="mb-0">{{ stats.contractors }}</h2>
-        <small>перевірених&nbsp;друкарів</small>
-      </div>
-    </div>
-    <div class="col-md-4 mb-3">
-      <div class="card shadow-sm p-3">
-        <h2 class="mb-0">{{ stats.offers }}</h2>
-        <small>актуальних&nbsp;пропозицій</small>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- про нас -->
-<section class="bg-white py-5 border-top">
+<!-- Hero Section -->
+<section class="bg-dark text-white text-center py-5 position-relative overflow-hidden" style="background-color: #1f1f1f;">
   <div class="container">
-    <h3 class="text-center mb-4">Чому нам довіряють</h3>
-    <div class="row">
-      <div class="col-md-4 mb-3">
-        <h5>Прозорі ціни</h5>
-        <p class="mb-0">Кожна пропозиція містить чітку вартість за грам. Ніяких прихованих платежів.</p>
+    <h1 class="display-3 fw-bold mb-3" style="color:#f07b00">3D Платформа</h1>
+    <p class="lead mb-4">Поєднуємо замовників і виконавців 3D-друку. Швидко. Надійно. Прозоро.</p>
+    <div class="d-flex justify-content-center flex-wrap">
+      <a href="{{ url_for('main.login') }}?role=customer" class="btn btn-outline-light btn-lg m-2 px-4">Увійти замовнику</a>
+      <a href="{{ url_for('main.login') }}?role=contractor" class="btn btn-outline-warning btn-lg m-2 px-4">Увійти друкарю</a>
+      <a href="{{ url_for('main.register') }}?role=customer" class="btn btn-warning btn-lg m-2 px-4">Реєстрація замовника</a>
+      <a href="{{ url_for('main.register') }}?role=contractor" class="btn btn-light btn-lg m-2 px-4">Реєстрація друкаря</a>
+    </div>
+  </div>
+  <img src="{{ url_for('static', filename='img/hero-print.png') }}" class="position-absolute bottom-0 end-0 opacity-25 d-none d-md-block" style="height: 300px; z-index:-1;">
+</section>
+
+<!-- Stats Section -->
+<section class="container my-5">
+  <div class="row text-center g-4">
+    <div class="col-md-4">
+      <div class="card border-0 shadow h-100 py-4">
+        <h2 class="display-5 fw-bold text-dark">{{ stats.customers }}</h2>
+        <p class="text-muted">активних замовників</p>
       </div>
-      <div class="col-md-4 mb-3">
-        <h5>Рейтинг виконавців</h5>
-        <p class="mb-0">Система відгуків допомагає обирати найкращих друкарів за якістю та швидкістю.</p>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow h-100 py-4">
+        <h2 class="display-5 fw-bold text-dark">{{ stats.contractors }}</h2>
+        <p class="text-muted">перевірених друкарів</p>
       </div>
-      <div class="col-md-4 mb-3">
-        <h5>Безпечні транзакції</h5>
-        <p class="mb-0">Ми працюємо через LiqPay у тестовому та бойовому режимах — ваші кошти у безпеці.</p>
+    </div>
+    <div class="col-md-4">
+      <div class="card border-0 shadow h-100 py-4">
+        <h2 class="display-5 fw-bold text-dark">{{ stats.offers }}</h2>
+        <p class="text-muted">актуальних пропозицій</p>
       </div>
     </div>
   </div>
 </section>
+
+<!-- Features Section -->
+<section class="bg-light py-5 border-top border-warning">
+  <div class="container">
+    <h3 class="text-center mb-5 fw-bold text-dark">Наші переваги</h3>
+    <div class="row text-center g-4">
+      <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 shadow-sm">
+          <div class="mb-3"><i class="bi bi-cash-coin fs-1 text-warning"></i></div>
+          <h5 class="fw-bold">Прозорі ціни</h5>
+          <p class="text-muted">Фіксована вартість за грам. Жодних прихованих комісій.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 shadow-sm">
+          <div class="mb-3"><i class="bi bi-stars fs-1 text-warning"></i></div>
+          <h5 class="fw-bold">Рейтинг виконавців</h5>
+          <p class="text-muted">Реальні відгуки формують вашу довіру до сервісу.</p>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card h-100 p-4 border-0 shadow-sm">
+          <div class="mb-3"><i class="bi bi-lock fs-1 text-warning"></i></div>
+          <h5 class="fw-bold">Безпечні платежі</h5>
+          <p class="text-muted">LiqPay гарантує надійні фінансові операції.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Decorative Strip -->
+<div class="bg-warning py-2 text-center text-dark fw-bold">
+  Спробуйте наш сервіс вже сьогодні — натисніть на кнопку вище!
+</div>
+
 {% endblock %}

@@ -1,0 +1,339 @@
+
+/* Основні кольори (Prusa-тема) */
+:root {
+    --primary-color: #f37324;  /* помаранчевий */
+    --dark-bg: #1c1c1e;
+    --card-bg: #2a2a2e;
+    --text-color: #ffffff;
+    --accent: #ffb85c;
+    --border-radius: 0.75rem;
+    --transition: all 0.3s ease-in-out;
+  }
+  
+  body {
+    background-color: var(--dark-bg);
+    color: var(--text-color);
+    font-family: 'Segoe UI', sans-serif;
+    scroll-behavior: smooth;
+  }
+  
+  /* Навбар */
+  .navbar {
+    background-color: #111;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+  }
+  .navbar-brand {
+    color: var(--primary-color) !important;
+    font-weight: bold;
+    font-size: 1.4rem;
+  }
+  .navbar-nav .nav-link {
+    color: var(--text-color) !important;
+    transition: var(--transition);
+  }
+  .navbar-nav .nav-link:hover {
+    color: var(--primary-color) !important;
+  }
+  
+  /* Кнопки */
+  .btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+  }
+  .btn-outline-info {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .btn-outline-info:hover {
+    background-color: var(--accent);
+    color: #111;
+  }
+  
+  /* Карточки */
+  .card {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: none;
+    border-radius: var(--border-radius);
+    transition: var(--transition);
+  }
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+  }
+  
+  /* Заголовки */
+  h1, h2, h3, h4, h5 {
+    color: var(--accent);
+  }
+  
+  /* Секції */
+  section {
+    margin-bottom: 3rem;
+  }
+  section.bg-light {
+    background-color: #2e2e32 !important;
+  }
+  
+  /* Анімації */
+  @keyframes fadeInUp {
+    from {
+      transform: translateY(30px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  .card, .btn, .navbar, section {
+    animation: fadeInUp 0.5s ease forwards;
+  }
+  
+  /* Інпут-форми */
+  input.form-control {
+    background-color: #1f1f22;
+    border: 1px solid #555;
+    color: white;
+  }
+  input.form-control::placeholder {
+    color: #aaa;
+  }
+
+  /* Hero секція */
+section.jumbotron,
+section.bg-dark,
+section.text-center {
+  border-radius: var(--border-radius);
+  margin-top: 2rem;
+  padding: 3rem 2rem;
+}
+
+/* Статистика + переваги */
+.card,
+section.container,
+section.bg-light,
+section.bg-white {
+  border-radius: var(--border-radius);
+}
+
+/* Нижній банер */
+section.call-to-action,
+.footer-highlight {
+  border-radius: var(--border-radius);
+  background-color: var(--accent);
+  color: #111;
+  text-align: center;
+  padding: 1rem 2rem;
+  font-weight: 500;
+  margin-top: 3rem;
+}
+
+/* Краще контрастування тексту в cards */
+.card p,
+.card h5,
+.card .text-muted {
+  color: #e0e0e0 !important;  /* світло-сірий */
+}
+
+/* або повністю білий, якщо хочеш максимально чітко: */
+.card p {
+  color: #f8f8f8;
+}
+
+/* Заголовок блоку переваг */
+section h3 {
+  color: #ffb85c;
+}
+
+/* Виправлення кольору заголовка "Наші переваги" */
+section h3,
+section h2,
+section h1 {
+  color: var(--accent);
+}
+
+/* Цифри в cards */
+.card h2, .card .display-5 {
+  color: #ffffff !important;  /* білий */
+  font-weight: 600;
+}
+
+/* Підписи до цифр */
+.card p {
+  color: #cccccc;
+}
+
+/* Заголовок секції */
+section .text-center.fw-bold {
+    color: var(--accent);
+    font-size: 2.2rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.6);
+  }
+  
+  /* Блоки переваг */
+  section .card {
+    border-radius: var(--border-radius);
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    box-shadow: 0 4px 16px rgb(219, 205, 157);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  section .card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.6);
+  }
+  
+  /* Іконки */
+  section .card i {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+  }
+  
+  /* Текст всередині карточок */
+  section .card p {
+    color: #ccc;
+    font-size: 0.95rem;
+  }
+  
+  /* Перевизначення білих фонових елементів для темної теми */
+.card-header.bg-white,
+.card-footer.bg-white,
+.thead-light {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border-bottom: 1px solid #444;
+}
+
+//* Скруглення кутів таблиці чатів */
+.table, .table thead, .table tbody, .table th, .table td {
+    border: none;
+    border-radius: var(--border-radius);
+  }
+  
+  /* Темна таблиця без білого фону */
+  .table {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    overflow: hidden;
+  }
+  
+  .table thead {
+    background-color: #2e2e32;
+    color: var(--accent);
+  }
+  
+  .table-striped tbody tr:nth-of-type(odd) {
+    background-color: #222;
+  }
+  .table-striped tbody tr:nth-of-type(even) {
+    background-color: #1a1a1a;
+  }
+  
+  /* Кнопки в таблиці */
+  .table .btn-outline-primary {
+    color: var(--accent);
+    border-color: var(--accent);
+    border-radius: 0.4rem;
+    padding: 0.25rem 0.6rem;
+    font-size: 0.85rem;
+  }
+  .table .btn-outline-primary:hover {
+    background-color: var(--accent);
+    color: #111;
+  }
+  
+  /* Заголовок блоку */
+  h4 {
+    color: var(--accent);
+    margin-top: 2rem;
+  }
+  
+/* ---- Спільне для всіх карток ---- */
+.card {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: none;
+    border-radius: var(--border-radius);
+    overflow: hidden;
+    transition: var(--transition);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* ---- Заголовок картки ---- */
+  .card-header {
+    background-color: #2c2c2f !important;
+    color: var(--text-color);
+    border-bottom: none;
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+  }
+  
+  /* ---- Нижній футер ---- */
+  .card-footer {
+    background-color: #2c2c2f !important;
+    border-top: none;
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+  }
+  
+  /* ---- Картинки в каруселі ---- */
+  .carousel-inner img {
+    border-radius: 0;
+    border-bottom-left-radius: var(--border-radius);
+    border-bottom-right-radius: var(--border-radius);
+  }
+  
+  /* ---- Таблиця чатів ---- */
+  .table {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+  .table thead {
+    background-color: #2e2e32;
+    color: var(--accent);
+  }
+  .table td, .table th {
+    border: none;
+    vertical-align: middle;
+  }
+  .table-striped tbody tr:nth-child(odd) {
+    background-color: #252525;
+  }
+  .table-striped tbody tr:nth-child(even) {
+    background-color: #1e1e1e;
+  }
+  
+  /* ---- Кнопка в таблиці ---- */
+  .table .btn-outline-primary {
+    border-color: var(--accent);
+    color: var(--accent);
+    border-radius: 0.4rem;
+  }
+  .table .btn-outline-primary:hover {
+    background-color: var(--accent);
+    color: #111;
+  }
+  
+  /* ---- Картки на сторінці пропозицій ---- */
+  .card .btn-block {
+    border-radius: 0.4rem;
+  }
+  
+  /* ---- Виправлення марджинів ---- */
+  h4, h2 {
+    color: var(--accent);
+    margin-top: 1rem;
+  }
+  /* Темна голова таблиці */
+.thead-dark-custom {
+    background-color: #2e2e32;
+    color: var(--accent);
+    border-top-left-radius: var(--border-radius);
+    border-top-right-radius: var(--border-radius);
+  }
+  
