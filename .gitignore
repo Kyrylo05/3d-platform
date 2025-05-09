@@ -1,1 +1,58 @@
-...весь цей текст...
+# 🔥 Python кеші
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.log
+
+# 🐍 Віртуальні середовища
+venv/
+env/
+ENV/
+.venv/
+.ENV/
+
+# 💽 SQLite база даних
+*.sqlite3
+*.db
+site.db
+
+# 📦 PIP кеші
+pip-log.txt
+pip-delete-this-directory.txt
+
+# 🖼️ Завантажені фото
+app/static/uploads/
+app/static/examples/
+app/static/stl_files/
+
+# 🔐 Flask instance / секрети
+instance/
+.env
+*.secret
+*.bak
+
+# 🧪 Тестові артефакти
+.coverage
+.tox/
+.nox/
+.cache/
+pytest_cache/
+
+# 💻 IDE/редактори
+.vscode/
+.idea/
+*.swp
+
+# 🍏 Mac
+.DS_Store
+
+# 🪟 Windows
+Thumbs.db
+
+# 🧾 Git злиття, тимчасові файли
+*.orig
+*.save
+
+# 📂 Flask міграції
+migrations/

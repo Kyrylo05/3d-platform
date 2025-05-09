@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}3D Платформа{% endblock %}
 
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.css" />
+{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
 <section class="bg-dark text-white text-center py-5 position-relative overflow-hidden" style="background-color: #1f1f1f;">
@@ -14,37 +19,26 @@
       <a href="{{ url_for('main.register') }}?role=contractor" class="btn btn-light btn-lg m-2 px-4">Реєстрація друкаря</a>
     </div>
   </div>
-  <img src="{{ url_for('static', filename='img/hero-print.png') }}" class="position-absolute bottom-0 end-0 opacity-25 d-none d-md-block" style="height: 300px; z-index:-1;">
 </section>
 
 <!-- Stats Section -->
 <section class="container my-5">
   <div class="row text-center g-4">
+    {% for key, value in stats.items() %}
     <div class="col-md-4">
       <div class="card border-0 shadow h-100 py-4">
-        <h2 class="display-5 fw-bold text-dark">{{ stats.customers }}</h2>
-        <p class="text-muted">активних замовників</p>
+        <h2 class="display-5 fw-bold text-dark">{{ value }}</h2>
+        <p class="text-muted">{{ key }}</p>
       </div>
     </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow h-100 py-4">
-        <h2 class="display-5 fw-bold text-dark">{{ stats.contractors }}</h2>
-        <p class="text-muted">перевірених друкарів</p>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="card border-0 shadow h-100 py-4">
-        <h2 class="display-5 fw-bold text-dark">{{ stats.offers }}</h2>
-        <p class="text-muted">актуальних пропозицій</p>
-      </div>
-    </div>
+    {% endfor %}
   </div>
 </section>
 
 <!-- Features Section -->
 <section class="bg-light py-5 border-top border-warning">
   <div class="container">
-    <h3 class="text-center mb-5 fw-bold text-dark">Наші переваги</h3>
+    <h3 class="text-center mb-5 fw-bold text-dark" style="color:#f07b00">Наші переваги</h3>
     <div class="row text-center g-4">
       <div class="col-md-4">
         <div class="card h-100 p-4 border-0 shadow-sm">
@@ -71,9 +65,40 @@
   </div>
 </section>
 
-<!-- Decorative Strip -->
+<!-- Gallery Section -->
+<section class="py-5 bg-dark border-top border-warning">
+  <div class="container">
+    <h3 class="text-center mb-5 fw-bold text-warning">Натхнення з 3D-друку</h3>
+    <div class="row gx-3 gy-1">  <!-- мінімальні вертикальні відступи -->
+      {% for i in range(1, 7) %}
+      <div class="col-sm-6 col-md-4">
+        <a data-fancybox="gallery" href="{{ url_for('static', filename='img/img' ~ i ~ '.jpeg') }}">
+          <br>
+          <div class="overflow-hidden rounded shadow-sm" style="height: 220px;">
+            <img src="{{ url_for('static', filename='img/img' ~ i ~ '.jpeg') }}"
+                 class="img-fluid w-100 h-100"
+                 style="object-fit: cover; transition: transform 0.3s ease-in-out;"
+                 onmouseover="this.style.transform='scale(1.05)'"
+                 onmouseout="this.style.transform='scale(1)'"
+                 alt="3D приклад {{ i }}">
+          </div>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    
+    </div>
+  </div>
+</section>
+
+
+<!-- Call to Action -->
 <div class="bg-warning py-2 text-center text-dark fw-bold">
   Спробуйте наш сервіс вже сьогодні — натисніть на кнопку вище!
 </div>
+{% endblock %}
 
+{% block scripts %}
+  {{ super() }}
+  <script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox.umd.js"></script>
 {% endblock %}
