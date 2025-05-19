@@ -56,7 +56,45 @@
 ---
 
 ## 🗂 Структура проєкту
-![image](https://github.com/user-attachments/assets/f88835ab-6469-4ac3-b218-6eb2bb58a31c)
+├── ALTER
+├── app
+│   ├── __init__.py
+│   ├── models.py
+│   ├── __pycache__
+│   ├── routes.py
+│   ├── static
+│   └── templates
+├── app.py
+├── instance
+│   └── site.db
+├── migrations
+│   ├── alembic.ini
+│   ├── env.py
+│   ├── __pycache__
+│   ├── README
+│   ├── script.py.mako
+│   └── versions
+├── README.md
+├── requirements.txt
+├── templates
+│   ├── base.html
+│   ├── create_offer.html
+│   ├── create_order.html
+│   ├── dashboard.html
+│   ├── edit_offer.html
+│   ├── edit_profile.html
+│   ├── index.html
+│   ├── login.html
+│   ├── offer_detail.html
+│   ├── offers_list.html
+│   ├── register.html
+│   └── view_profile.html
+└── venv
+    ├── bin
+    ├── include
+    ├── lib
+    ├── lib64 -> lib
+    └── pyvenv.cfg
 
 
 
