@@ -3,10 +3,20 @@ from flask import jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from app.models import db, Customer, Contractor, Offer, Order, ChatMessage
+from app.models import db, Customer, Contractor, Offer, Order, ChatMessage#, Rating
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from sqlalchemy import and_
 import os
+
+# --- перелік стандартних матеріалів 3D-друку (можеш редагувати) ---
+MATERIALS = ["PLA", "ABS", "PETG", "TPU", "Nylon", "Resin", "ASA", "PC"]
+
+ACTIVE_STATUSES = (
+    'Draft',
+    'Очікує підтвердження',
+    'У виконанні',
+    'Друк завершено'
+)
 
 from app.models import db, Customer, Contractor, Offer, Order
 
@@ -125,6 +135,7 @@ def logout():
     session.pop('role', None)
     return redirect(url_for('main.home'))
 
+
 # ------------------ Створення пропозиції ------------------
 @main.route('/contractor/create_offer', methods=['GET', 'POST'])
 @login_required
@@ -133,36 +144,43 @@ def create_offer():
         return "Доступ лише для друкарів", 403
 
     if request.method == 'POST':
-        material = request.form['material']
-        layer_height = float(request.form['layer_height'])
+        # якщо обрано «other» — забираємо текст із поля material_other
+        material = request.form.get('material')
+        if material == 'other':
+            material = request.form.get('material_other', '').strip() or 'Other'
+
+        layer_height   = float(request.form['layer_height'])
         price_per_gram = float(request.form['price_per_gram'])
-        max_size = request.form['max_size']
-        min_size = request.form['min_size']
+        max_size       = request.form['max_size']
+        min_size       = request.form['min_size']
 
         offer = Offer(
-            material=material,
-            layer_height=layer_height,
-            price_per_gram=price_per_gram,
-            max_size=max_size,
-            min_size=min_size,
-            contractor_id=current_user.id
+            material       = material,
+            layer_height   = layer_height,
+            price_per_gram = price_per_gram,
+            max_size       = max_size,
+            min_size       = min_size,
+            contractor_id  = current_user.id
         )
         db.session.add(offer)
         db.session.commit()
 
-        # Збереження фото прикладів (до 3)
-        files = request.files.getlist('images')
+        # зберігаємо до 10 фотографій-прикладів (можеш змінити ліміт)
+        files         = request.files.getlist('images')
         examples_path = os.path.join('app', 'static', 'examples')
         os.makedirs(examples_path, exist_ok=True)
 
-        for idx, f in enumerate(files[:3]):
+        for idx, f in enumerate(files[:10], start=1):
             if f and f.filename:
-                fname = f'offer_{offer.id}_example_{idx+1}.jpg'
+                fname = f'offer_{offer.id}_example_{idx}.jpg'
                 f.save(os.path.join(examples_path, fname))
 
         return redirect(url_for('main.dashboard', role='contractor'))
 
-    return render_template('create_offer.html')
+    # GET — показуємо форму зі списком MATERIALS
+    return render_template('create_offer.html', materials=MATERIALS)
+
+
 
 # ------------------ Редагування пропозиції ------------------
 @main.route('/contractor/edit_offer/<int:offer_id>', methods=['GET', 'POST'])
@@ -176,28 +194,31 @@ def edit_offer(offer_id):
         return "Доступ заборонено", 403
 
     if request.method == 'POST':
-        offer.material = request.form['material']
-        offer.layer_height = float(request.form['layer_height'])
-        offer.price_per_gram = float(request.form['price_per_gram'])
-        offer.max_size = request.form['max_size']
-        offer.min_size = request.form['min_size']
+        material = request.form.get('material')
+        if material == 'other':
+            material = request.form.get('material_other', '').strip() or 'Other'
 
-        # якщо додано нові фото — зберегти (замість старих)
+        offer.material       = material
+        offer.layer_height   = float(request.form['layer_height'])
+        offer.price_per_gram = float(request.form['price_per_gram'])
+        offer.max_size       = request.form['max_size']
+        offer.min_size       = request.form['min_size']
+
+        # якщо завантажені нові фото — перезаписуємо (теж до 10 шт.)
         files = request.files.getlist('images')
         if files and any(f.filename for f in files):
             examples_path = os.path.join('app', 'static', 'examples')
             os.makedirs(examples_path, exist_ok=True)
-
-            # зберігаємо до 3 штук
-            for idx, f in enumerate(files[:3]):
+            for idx, f in enumerate(files[:10], start=1):
                 if f and f.filename:
-                    fname = f'offer_{offer.id}_example_{idx+1}.jpg'
+                    fname = f'offer_{offer.id}_example_{idx}.jpg'
                     f.save(os.path.join(examples_path, fname))
 
         db.session.commit()
         return redirect(url_for('main.dashboard', role='contractor'))
 
-    return render_template('edit_offer.html', offer=offer)
+    # GET — показуємо форму, передаючи список MATERIALS і сам offer
+    return render_template('edit_offer.html', offer=offer, materials=MATERIALS)
 
 # ------------------ Видалення пропозиції ------------------
 @main.route('/contractor/delete_offer/<int:offer_id>', methods=['POST'])
@@ -221,11 +242,33 @@ def view_offers():
     if session.get('role') != 'customer':
         return "Доступ лише для замовників", 403
 
-    offers = Offer.query.all()
-    files  = set(os.listdir('app/static/examples'))
+    q = Offer.query
+
+    # ---- фільтрація ----
+    material = request.args.get('material')
+    if material:
+        q = q.filter_by(material=material)
+
+    max_price = request.args.get('max_price', type=float)
+    if max_price is not None:
+        q = q.filter(Offer.price_per_gram <= max_price)
+
+    sort = request.args.get('sort')
+    if sort == 'price_asc':
+        q = q.order_by(Offer.price_per_gram.asc())
+    elif sort == 'price_desc':
+        q = q.order_by(Offer.price_per_gram.desc())
+
+    offers = q.all()
+
+    # список унікальних матеріалів для фільтра
+    materials = db.session.query(Offer.material).distinct().order_by(Offer.material).all()
+    materials = [m[0] for m in materials]
+
     return render_template('offers_list.html',
                            offers=offers,
-                           static_files=files)
+                           materials=materials,
+                           static_files=set(os.listdir('app/static/examples')))
 
 
 # ------------------ Детальна сторінка пропозиції ------------------
@@ -235,65 +278,57 @@ def offer_detail(offer_id):
     offer = Offer.query.get_or_404(offer_id)
     role  = session.get('role')
 
-    order_id     = request.args.get('order', type=int)
-    order        = None
-    chat_orders  = []
+    order_id    = request.args.get('order', type=int)
+    order       = None
+    chat_orders = []
 
+    # --- ДЛЯ ЗАМОВНИКА ---
     if role == 'customer':
+        # Беремо будь-яке останнє замовлення (Draft теж підходить)
         order = (Order.query
                  .filter_by(offer_id=offer_id, customer_id=current_user.id)
-                 .filter(Order.messages.any())
                  .order_by(Order.timestamp.desc())
                  .first())
-
-        if order is None:
-            order = (Order.query
-                     .filter_by(offer_id=offer_id, customer_id=current_user.id)
-                     .order_by(Order.timestamp.desc())
-                     .first())
-
+        # Якщо зовсім нема — створюємо "Draft" (без STL)
         if order is None:
             order = Order(
-                stl_filename='__draft__.stl',
-                estimated_weight=0,
-                estimated_price=0,
-                status='Draft',
-                offer_id=offer_id,
-                customer_id=current_user.id,
-                contractor_id=offer.contractor.id
+                stl_filename      = '__draft__.stl',
+                estimated_weight  = 0,
+                estimated_price   = 0,
+                status            = 'Draft',
+                offer_id          = offer_id,
+                customer_id       = current_user.id,
+                contractor_id     = offer.contractor.id
             )
             db.session.add(order)
             db.session.commit()
-            db.session.refresh(order)  # 🧠 важливо: завантажити звʼязки order.messages
+            db.session.refresh(order)
+        show_chat = True
+        can_chat = True
 
-
+    # --- ДЛЯ ДРУКАРЯ ---
     elif role == 'contractor':
-        chat_orders = (Order.query
-                       .join(ChatMessage)
-                       .filter(and_(Order.offer_id == offer_id,
-                                    ChatMessage.sender_role == 'customer'))
-                       .group_by(Order.id)
-                       .order_by(Order.timestamp.desc())
-                       .all())
-
+        all_orders = (Order.query
+                      .filter_by(offer_id=offer_id, contractor_id=current_user.id)
+                      .order_by(Order.timestamp.desc())
+                      .all())
+        seen = set()
+        chat_orders = []
+        for o in all_orders:
+            if o.customer_id not in seen:
+                chat_orders.append(o)
+                seen.add(o.customer_id)
         if order_id:
             order = Order.query.get_or_404(order_id)
-            if order.contractor_id != current_user.id or order.offer_id != offer_id:
-                return "Доступ заборонено", 403
-        else:
-            order = chat_orders[0] if chat_orders else None
-
-        if order and order not in chat_orders:
-            chat_orders.insert(0, order)
+        elif chat_orders:
+            order = chat_orders[0]
+        show_chat = order is not None
+        can_chat = order is not None
     else:
-        return "Невідома роль", 403
+        show_chat = False
+        can_chat = False
 
     chat_cnt = len(chat_orders) if role == 'contractor' else 1
-    show_chat = (role == 'customer') or chat_cnt > 0
-
-    # 🧠 Головна логіка: чи показувати чат (для шаблону)
-    customer_msgs_exist = any(m.sender_role == 'customer' for m in order.messages) if order else False
-    can_chat = (role == 'customer') or (role == 'contractor' and customer_msgs_exist)
 
     return render_template(
         'offer_detail.html',
@@ -303,10 +338,11 @@ def offer_detail(offer_id):
         chats     = chat_orders if role == 'contractor' else [],
         chat_cnt  = chat_cnt,
         show_chat = show_chat,
-        can_chat  = can_chat  # 🆕 головна змінна
+        can_chat  = can_chat
     )
 
-# ------------------ Створення замовлення ------------------
+
+# ------------------ Створення / повторне створення замовлення ------------------
 @main.route('/order/create/<int:offer_id>', methods=['GET', 'POST'])
 @login_required
 def create_order(offer_id):
@@ -315,39 +351,75 @@ def create_order(offer_id):
 
     offer = Offer.query.get_or_404(offer_id)
 
+    # ───────────── POST ─────────────
     if request.method == 'POST':
         file = request.files.get('stl_file')
         if not file or not file.filename.endswith('.stl'):
             return "Потрібен STL-файл!", 400
 
-        # Створюємо директорію для STL-файлів, якщо її немає
-        stl_path = os.path.join('app', 'static', 'stl_files')
-        os.makedirs(stl_path, exist_ok=True)
+        # шукаємо «активне» замовлення (Draft / Очікує … / …)
+        active = (Order.query
+                  .filter_by(offer_id      = offer_id,
+                             customer_id   = current_user.id,
+                             contractor_id = offer.contractor.id)
+                  .filter(Order.status.in_(ACTIVE_STATUSES),
+                          Order.stl_filename != '__draft__.stl')
+                  .first())
 
+        # якщо є активне – просто перейдемо до нього (не даємо плодити дублікати)
+        if active:
+            return redirect(url_for('main.offer_detail',
+                                    offer_id = offer_id,
+                                    order    = active.id))
+
+        # якщо ж останнє замовлення було **відхилено**, — ПЕРЕВИКОРИСТОВУЄМО його
+        rejected = (Order.query
+                    .filter_by(offer_id      = offer_id,
+                               customer_id   = current_user.id,
+                               contractor_id = offer.contractor.id,
+                               status        = 'Відхилено')
+                    .order_by(Order.timestamp.desc())
+                    .first())
+
+        # ── зберігаємо файл ──
+        stl_dir  = os.path.join('app', 'static', 'stl_files')
+        os.makedirs(stl_dir, exist_ok=True)
         filename = secure_filename(file.filename)
-        file.save(os.path.join(stl_path, filename))
+        file.save(os.path.join(stl_dir, filename))
 
-        estimated_weight = 50.0  # заглушка
-        estimated_price = estimated_weight * offer.price_per_gram
+        # TODO: обчислюємо вагу реально
+        estimated_weight = 50.0
+        estimated_price  = estimated_weight * offer.price_per_gram
 
-        print('Адреса доставки:', request.form.get('delivery_info'))
+        if rejected:               # ▲ оновлюємо «відхилене» замовлення
+            rejected.stl_filename     = filename
+            rejected.estimated_weight = estimated_weight
+            rejected.estimated_price  = estimated_price
+            rejected.delivery_info    = request.form.get('delivery_info')
+            rejected.status           = 'Очікує підтвердження'
+            db.session.commit()
+            oid = rejected.id
+        else:                       # ▼ створюємо геть новий Order
+            new_order = Order(
+                stl_filename      = filename,
+                estimated_weight  = estimated_weight,
+                estimated_price   = estimated_price,
+                delivery_info     = request.form.get('delivery_info'),
+                offer_id          = offer.id,
+                customer_id       = current_user.id,
+                contractor_id     = offer.contractor.id,
+                status            = 'Очікує підтвердження'
+            )
+            db.session.add(new_order)
+            db.session.commit()
+            oid = new_order.id
 
-
-        order = Order(
-            stl_filename=filename,
-            estimated_weight=estimated_weight,
-            estimated_price=estimated_price,
-            delivery_info=request.form.get('delivery_info'),
-            offer_id=offer.id,
-            customer_id=current_user.id,
-            contractor_id=offer.contractor.id
-        )
-        db.session.add(order)
-        db.session.commit()
-
-        return redirect(url_for('main.dashboard', role='customer'))
-
+        return redirect(url_for('main.offer_detail',
+                                offer_id = offer.id,
+                                order    = oid))
+    # ───────────── GET ─────────────
     return render_template('create_order.html', offer=offer)
+
 
 # ------------------ Редагування профілю ------------------
 @main.route('/profile/<role>', methods=['GET', 'POST'])
@@ -430,7 +502,9 @@ def finish_print(order_id):
         return "Доступ заборонено", 403
 
     file = request.files.get('progress_img')
-    if file and file.filename:
+    if not file or not file.filename:
+        return "Потрібно додати фото звіту!", 400
+
         examples_path = os.path.join('app', 'static', 'examples')
         os.makedirs(examples_path, exist_ok=True)          # ← гарантуємо директорію
 
@@ -464,12 +538,59 @@ def ship_order(order_id):
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id)) 
 
+# ------------------ Оцінити клієнта (друкар) ------------------
+@main.route('/order/<int:order_id>/rate', methods=['POST'])
+@login_required
+def rate_order(order_id):
+    """
+    Друкар ставить оцінку клієнту (1-5) після відправлення виробу.
+    Використовуємо таблицю Rating:
+        id, order_id, customer_id, contractor_id, score, created_at
+    """
+    order = Order.query.get_or_404(order_id)
+
+    # доступ тільки друкарю з цього замовлення
+    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+        return "Доступ заборонено", 403
+
+    if order.status != 'Відправлено':
+        return "Оцінку можна поставити лише після відправлення", 400
+
+    # якщо оцінку вже поставлено – забороняємо дублювання
+    if Rating.query.filter_by(order_id=order.id,
+                              contractor_id=current_user.id).first():
+        return "Оцінку вже виставлено", 400
+
+    try:
+        score = int(request.form.get('score', 0))
+    except ValueError:
+        score = 0
+    score = max(1, min(score, 5))          # межі 1-5
+
+    r = Rating(order_id     = order.id,
+               customer_id  = order.customer_id,
+               contractor_id= current_user.id,
+               score        = score)
+    db.session.add(r)
+
+    # 👉 перераховуємо середній рейтинг клієнта
+    avg = db.session.query(db.func.avg(Rating.score)) \
+                    .filter(Rating.customer_id == order.customer_id) \
+                    .scalar() or 0
+    customer = Customer.query.get(order.customer_id)
+    customer.rating = round(avg, 2)
+
+    db.session.commit()
+    return redirect(url_for('main.offer_detail',
+                            offer_id=order.offer_id,
+                            order   =order.id))
+
 # ------------------ CHAT ------------------
 def _allowed(order):
     return ((session['role']=='customer'   and order.customer_id==current_user.id) or
             (session['role']=='contractor' and order.contractor_id==current_user.id))
 
-# GET усі повідомлення
+# GET історія
 @main.route('/order/<int:oid>/chat', methods=['GET'])
 @login_required
 def chat_messages(oid):
@@ -477,17 +598,46 @@ def chat_messages(oid):
     if not _allowed(order):
         return '', 403
 
+    # 1) Чат дозволений тільки якщо замовник вже створив хоч одне замовлення під цю пропозицію
+    # (інакше – повертаємо порожній список)
+    if session['role'] == 'contractor':
+        # Чи є хоча б одне замовлення цього клієнта під цю пропозицію?
+        first_order = (Order.query
+            .filter_by(
+                offer_id=order.offer_id,
+                customer_id=order.customer_id,
+                contractor_id=order.contractor_id
+            )
+            .order_by(Order.timestamp)
+            .first()
+        )
+        # Якщо нема – чат порожній
+        if not first_order:
+            return jsonify([])
+
+    # 2) Дістаємо всі order.id для цієї пари (пропозиція + дві особи)
+    thread_orders = (Order.query
+        .with_entities(Order.id)
+        .filter_by(
+            offer_id=order.offer_id,
+            customer_id=order.customer_id,
+            contractor_id=order.contractor_id
+        )
+    ).subquery()
+
+    # 3) Витягуємо всі повідомлення в цій "гілці"
     msgs = (ChatMessage.query
-            .filter_by(order_id=oid)
-            .order_by(ChatMessage.created_at)
-            .all())
+        .filter(ChatMessage.order_id.in_(thread_orders.select()))
+        .order_by(ChatMessage.created_at)
+        .all()
+    )
+
 
     return jsonify([{
         "mine":  (m.sender_id == current_user.id and m.sender_role == session['role']),
         "role":  m.sender_role,
         "text":  m.text,
-        "img":   (m.text.startswith('[img]') and
-                  url_for('static', filename='examples/' + m.text[5:])) or None,
+        "img":   (m.text.startswith('[img]') and url_for('static', filename='examples/' + m.text[5:])) or None,
         "time":  m.created_at.strftime('%H:%M')
     } for m in msgs])
 
@@ -498,27 +648,20 @@ def chat_send(oid):
     order = Order.query.get_or_404(oid)
     if not _allowed(order):
         return '', 403
-
-    # перше повідомлення може надіслати тільки customer
-    first = ChatMessage.query.filter_by(order_id=oid).first() is None
-    if first and session['role'] != 'customer':
-        return jsonify({"error": "Лише замовник може почати чат"}), 403
-
     txt = request.form.get('text','').strip()
     if not txt:
         return '', 400
-
     m = ChatMessage(order_id=oid,
                     sender_id=current_user.id,
                     sender_role=session['role'],
                     text=txt)
     db.session.add(m)
     db.session.commit()
-
     return jsonify({
         "mine": True,
         "role": m.sender_role,
         "text": m.text,
         "time": m.created_at.strftime('%H:%M')
     }), 201
+
 

@@ -2,33 +2,84 @@
 {% block title %}Створити пропозицію{% endblock %}
 
 {% block content %}
-<h2>Нова пропозиція</h2>
-<form method="POST" enctype="multipart/form-data">
-  <div class="form-group">
-    <label>Матеріал</label>
-    <input type="text" class="form-control" name="material" required>
-  </div>
-  <div class="form-group">
-    <label>Товщина шару (мм)</label>
-    <input type="number" step="0.01" class="form-control" name="layer_height" required>
-  </div>
-  <div class="form-group">
-    <label>Ціна за грам (грн)</label>
-    <input type="number" step="0.01" class="form-control" name="price_per_gram" required>
-  </div>
-  <div class="form-group">
-    <label>Мін. розмір</label>
-    <input type="text" class="form-control" name="min_size" required>
-  </div>
-  <div class="form-group">
-    <label>Макс. розмір</label>
-    <input type="text" class="form-control" name="max_size" required>
-  </div>
-  <div class="form-group">
-    <label>Фото прикладів (до 3)</label>
-    <input type="file" class="form-control" name="images" multiple accept="image/*">
+<h2 class="mb-4">Нова пропозиція</h2>
+
+<form method="POST" enctype="multipart/form-data" class="mb-5">
+
+  <!-- Матеріал ------------------------------------------------------- -->
+  <div class="form-group mb-3">
+    <label class="fw-bold">Матеріал</label>
+    <select name="material" id="materialSel" class="form-select" required>
+      {% for m in materials %}
+        <option value="{{ m }}">{{ m }}</option>
+      {% endfor %}
+      <option value="other">Інший…</option>
+    </select>
+
+    <!-- з’являється лише коли вибрано «Інший…» -->
+    <input type="text"
+           name="material_other"
+           id="materialOther"
+           class="form-control mt-2 d-none"
+           placeholder="Введіть власний матеріал">
   </div>
 
-  <button type="submit" class="btn btn-success">Створити</button>
+  <!-- Товщина шару -->
+  <div class="form-group mb-3">
+    <label class="fw-bold">Товщина шару (мм)</label>
+    <input type="number" step="0.01" name="layer_height"
+           class="form-control" required>
+  </div>
+
+  <!-- Ціна -->
+  <div class="form-group mb-3">
+    <label class="fw-bold">Ціна за грам (грн)</label>
+    <input type="number" step="0.01" name="price_per_gram"
+           class="form-control" required>
+  </div>
+
+  <!-- Розміри -->
+  <div class="row">
+    <div class="col-md-6 mb-3">
+      <label class="fw-bold">Мін. розмір</label>
+      <input type="text" name="min_size" class="form-control" required>
+    </div>
+    <div class="col-md-6 mb-3">
+      <label class="fw-bold">Макс. розмір</label>
+      <input type="text" name="max_size" class="form-control" required>
+    </div>
+  </div>
+
+  <!-- Фото -->
+  <div class="form-group mb-4">
+    <label class="fw-bold">Фото прикладів (до 10 шт.)</label>
+    <input type="file" name="images" class="form-control" multiple accept="image/*">
+  </div>
+
+  <!-- Кнопки -->
+  <button class="btn btn-success me-2">Створити</button>
+  <a href="{{ url_for('main.dashboard', role='contractor') }}" class="btn btn-secondary">Скасувати</a>
 </form>
+
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    const sel   = document.getElementById('materialSel');
+    const other = document.getElementById('materialOther');
+
+    function toggleOther(){
+      if (sel.value === 'other'){
+        other.classList.remove('d-none');
+        other.required = true;
+      }else{
+        other.classList.add('d-none');
+        other.required = false;
+        other.value = '';
+      }
+    }
+    sel.addEventListener('change', toggleOther);
+    toggleOther();            // ініціалізація
+  </script>
 {% endblock %}

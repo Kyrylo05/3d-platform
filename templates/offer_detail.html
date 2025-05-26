@@ -13,14 +13,27 @@
       <small>Рейтинг: {{ "%.1f"|format(offer.contractor.rating) }}</small>
     </div>
   </div>
-
+  
   <div class="card-body">
+    {% set can_chat = show_chat %}
 
     {# ───── Параметри пропозиції ───── #}
     <h5 class="text-primary">Матеріал: {{ offer.material }}</h5>
     <p><b>Товщина шару:</b> {{ offer.layer_height }} мм</p>
     <p><b>Ціна за грам:</b> {{ offer.price_per_gram }} ₴</p>
     <p><b>Розміри:</b> {{ offer.min_size }} – {{ offer.max_size }}</p>
+
+    {# ───── STL-файл (бачить також друкар) ───── #}
+    {% if role=='contractor' and order and order.stl_filename!='__draft__.stl' %}
+    <div class="alert stl-banner">
+      <b>STL-файл клієнта:</b>
+      <a class="btn btn-download"
+        download
+        href="{{ url_for('static', filename='stl_files/' ~ order.stl_filename) }}">
+        Завантажити {{ order.stl_filename }}
+      </a>
+    </div>
+    {% endif %}
 
     {# ───── Слайдер фото ───── #}
     <div id="carousel{{ offer.id }}" class="carousel slide my-4" data-ride="carousel">
@@ -40,9 +53,15 @@
       </a>
     </div>
 
-    {# ───── Кнопка «Замовити» (клієнт, доки STL draft) ───── #}
-    {% if role=='customer' and order and order.stl_filename=='__draft__.stl' %}
-      <a class="btn btn-primary btn-block mb-3" href="{{ url_for('main.create_order', offer_id=offer.id) }}">Замовити друк</a>
+    {# ───── Кнопка «Замовити друк» ───── #}
+    {% if role=='customer' and (
+          order is none or
+          order.stl_filename == '__draft__.stl' or
+          order.status in ('Відхилено', 'Відправлено')
+      ) %}
+      <form method="get" action="{{ url_for('main.create_order', offer_id=offer.id) }}">
+        <button class="btn btn-primary btn-block my-3">Замовити друк</button>
+      </form>
     {% endif %}
 
     {# ───── Дії друкаря ───── #}
@@ -63,7 +82,7 @@
       {% elif order.status == 'У виконанні' %}
         <form class="mb-3" method="POST" action="{{ url_for('main.finish_print', order_id=order.id) }}" enctype="multipart/form-data">
           <div class="form-group">
-            <label>Фото готової деталі (опц.)</label>
+            <label>Фото готової деталі (обовязково)</label>
             <input type="file" name="progress_img" accept="image/*" class="form-control">
           </div>
           <button class="btn btn-warning btn-block">Друк завершено</button>
@@ -104,24 +123,36 @@
       </div>
     {% endif %}
 
-{# ───── ЛОГІКА ЧАТУ ───── #}
-{% if can_chat %}
-  {% if role == 'contractor' and chat_cnt > 1 %}
-    <div class="row">
-      <div class="col-md-3 mb-3">
-        <h5 class="mb-2">Діалоги</h5>
-        <div class="list-group" id="chat-list">
-          {% for o in chats %}
-            <a href="{{ url_for('main.offer_detail', offer_id=offer.id, order=o.id) }}#chat"
-               class="list-group-item list-group-item-action {% if o.id == order.id %}active{% endif %}"
-               data-oid="{{ o.id }}">
-              {{ o.customer.full_name }}<br>
-              <small>{{ o.timestamp.strftime('%d.%m %H:%M') }}</small>
-            </a>
-          {% endfor %}
+    {# ───── ЛОГІКА ЧАТУ ───── #}
+    {% if can_chat %}
+      {% if role == 'contractor' and chat_cnt > 1 %}
+        <div class="row">
+          <div class="col-md-3 mb-3">
+            <h5 class="mb-2">Діалоги</h5>
+            <div class="list-group" id="chat-list">
+              {% for o in chats %}
+                <a href="{{ url_for('main.offer_detail', offer_id=offer.id, order=o.id) }}#chat"
+                   class="list-group-item list-group-item-action {% if o.id == order.id %}active{% endif %}"
+                   data-oid="{{ o.id }}">
+                  {{ o.customer.full_name }}<br>
+                  <small>{{ o.timestamp.strftime('%d.%m %H:%M') }}</small>
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+          <div class="col-md-9">
+            <h5 id="chat" class="mt-4">Чат</h5>
+            <div id="chat-box" class="border p-2 rounded mb-2"
+                 style="max-height:300px;overflow-y:auto;font-size:.9rem;"></div>
+            <form id="chat-form" class="input-group mt-2">
+              <input id="chat-input" name="text" class="form-control" placeholder="Написати повідомлення…">
+              <div class="input-group-append">
+                <button class="btn btn-primary">▶</button>
+              </div>
+            </form>
+          </div>
         </div>
-      </div>
-      <div class="col-md-9">
+      {% else %}
         <h5 id="chat" class="mt-4">Чат</h5>
         <div id="chat-box" class="border p-2 rounded mb-2"
              style="max-height:300px;overflow-y:auto;font-size:.9rem;"></div>
@@ -131,22 +162,10 @@
             <button class="btn btn-primary">▶</button>
           </div>
         </form>
-      </div>
-    </div>
-  {% else %}
-    <h5 id="chat" class="mt-4">Чат</h5>
-    <div id="chat-box" class="border p-2 rounded mb-2"
-         style="max-height:300px;overflow-y:auto;font-size:.9rem;"></div>
-    <form id="chat-form" class="input-group mt-2">
-      <input id="chat-input" name="text" class="form-control" placeholder="Написати повідомлення…">
-      <div class="input-group-append">
-        <button class="btn btn-primary">▶</button>
-      </div>
-    </form>
-  {% endif %}
-{% endif %}
+      {% endif %}
+    {% endif %}
 
-<br>
+    <br>
     {# ───── Кнопка «Назад» ───── #}
     {% if role=='customer' %}
       <a class="btn btn-secondary" href="{{ url_for('main.view_offers') }}">← Назад</a>

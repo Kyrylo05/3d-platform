@@ -347,4 +347,66 @@ section .text-center.fw-bold {
   .ratio-box {
     aspect-ratio: 4 / 3;
   }
-  
+  /* ─────────────────  STL-банер  ───────────────── */
+.alert.stl-banner{                        /* загальний контейнер */
+  background: #007e8c22;                  /* напівпрозорий циановий, щоб читався на dark-bg */
+  border: 1px solid #007e8c55;
+  border-radius: var(--border-radius);
+  padding: .75rem 1rem;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.alert.stl-banner b{                      /* лівий підпис  */
+  color: var(--accent);
+  font-weight:600;
+}
+
+.alert.stl-banner .btn-download{          /* кнопка завантаження */
+  background: #23b34b;                    /* «зелена» як на скрині, але більш насичена */
+  border:none;
+  color:#fff;
+  font-weight:600;
+  padding:.35rem 1rem;
+  border-radius:.45rem;
+  transition:var(--transition);
+}
+.alert.stl-banner .btn-download:hover{
+  background:#2edd61;
+  color:#111;
+  text-decoration:none;
+}
+
+/* ─────────────  кастомізуємо <input type=file>  ───────────── */
+input[type="file"].form-control,
+input[type="file"].form-control-file{
+  background:#1f1f22;
+  border:1px dashed #555;
+  color:#ddd;
+  padding:.45rem .75rem;
+  outline:none;
+  border-radius:.45rem;
+}
+input[type="file"].form-control:hover{
+  border-color:var(--accent);
+}
+
+/* прибираємо синю рамку Bootstrap при фокусі у темній темі */
+input[type="file"].form-control:focus{
+  box-shadow:none;
+  border-color:var(--primary-color);
+}
+
+/* ─────────────  жовта кнопка «Друк завершено»  ───────────── */
+.btn-finish-print{                         /* замість .btn-warning щоб не міняти глобально */
+  background:#ffcb05;                     /* жовтий */
+  border:none;
+  color:#111;
+  font-weight:600;
+  transition:var(--transition);
+}
+.btn-finish-print:hover{
+  background:#ffd84d;
+  color:#111;
+}

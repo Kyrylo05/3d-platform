@@ -3,6 +3,37 @@
 
 {% block content %}
 <h2 class="mb-4">Усі доступні пропозиції</h2>
+
+<form method="GET" class="mb-4">
+  <div class="row g-2 align-items-end">
+    <div class="col-md-4">
+      <label class="form-label text-light">Матеріал</label>
+      <select name="material" class="form-select">
+        <option value="">Всі</option>
+        {% for m in materials %}
+        <option value="{{ m }}" {% if request.args.get('material') == m %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3">
+      <label class="form-label text-light">Макс. ціна (грн/г)</label>
+      <input type="number" step="0.1" name="max_price" class="form-control"
+             value="{{ request.args.get('max_price', '') }}">
+    </div>
+    <div class="col-md-3">
+      <label class="form-label text-light">Сортувати</label>
+      <select name="sort" class="form-select">
+        <option value="">За замовчуванням</option>
+        <option value="price_asc" {% if request.args.get('sort') == 'price_asc' %}selected{% endif %}>Ціна ↑</option>
+        <option value="price_desc" {% if request.args.get('sort') == 'price_desc' %}selected{% endif %}>Ціна ↓</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-warning w-100">🔍 Пошук</button>
+    </div>
+  </div>
+</form>
+
 <div class="row">
   {% for offer in offers %}
   <div class="col-md-4 mb-4">
