@@ -56,9 +56,7 @@
 ---
 
 ## 🗂 Структура проєкту
-![image](https://github.com/user-attachments/assets/f88835ab-6469-4ac3-b218-6eb2bb58a31c)
-
-
+![image](https://github.com/user-attachments/assets/661d4aab-a720-43c8-8b71-116d129109e7)
 
 
 
