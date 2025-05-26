@@ -65,3 +65,10 @@ class ChatMessage(db.Model):
 progress_image      = db.Column(db.String(255))
 cancellation_reason = db.Column(db.String(500))
 messages = db.relationship('ChatMessage', backref='order', lazy=True)
+
+class Rating(db.Model):
+    id            = db.Column(db.Integer, primary_key=True)
+    order_id      = db.Column(db.Integer, db.ForeignKey('order.id'))
+    customer_id   = db.Column(db.Integer, db.ForeignKey('customer.id'))
+    contractor_id = db.Column(db.Integer, db.ForeignKey('contractor.id'))
+    score         = db.Column(db.Integer, nullable=False)  # 1-5

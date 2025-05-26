@@ -3,7 +3,7 @@ from flask import jsonify
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
-from app.models import db, Customer, Contractor, Offer, Order, ChatMessage#, Rating
+from app.models import db, Customer, Contractor, Offer, Order, ChatMessage, Rating
 from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from sqlalchemy import and_
 import os
@@ -106,10 +106,11 @@ def dashboard(role):
 
         # показуємо лише ті замовлення, де вже є хоч одне повідомлення
         chats = (Order.query
-                 .filter_by(contractor_id=current_user.id)
-                 .filter(Order.messages.any())        # ← головне фільтрування
-                 .order_by(Order.timestamp.desc())
-                 .all())
+                .filter_by(contractor_id=current_user.id, status='Очікує підтвердження')
+                .order_by(Order.timestamp.desc())
+                .all())
+
+
 
         from datetime import datetime
         return render_template(
@@ -306,29 +307,37 @@ def offer_detail(offer_id):
         show_chat = True
         can_chat = True
 
-    # --- ДЛЯ ДРУКАРЯ ---
+   # ДЛЯ ДРУКАРЯ
     elif role == 'contractor':
-        all_orders = (Order.query
-                      .filter_by(offer_id=offer_id, contractor_id=current_user.id)
-                      .order_by(Order.timestamp.desc())
-                      .all())
+        all_orders = (
+            Order.query
+            .filter_by(offer_id=offer_id, contractor_id=current_user.id)
+            .order_by(Order.timestamp.desc())
+            .all()
+        )
         seen = set()
         chat_orders = []
         for o in all_orders:
-            if o.customer_id not in seen:
+            # додаємо, якщо або не draft, або є хоч одне повідомлення
+            if o.customer_id not in seen and (o.stl_filename != '__draft__.stl' or len(o.messages) > 0):
                 chat_orders.append(o)
                 seen.add(o.customer_id)
         if order_id:
             order = Order.query.get_or_404(order_id)
         elif chat_orders:
             order = chat_orders[0]
+        else:
+            order = None
         show_chat = order is not None
-        can_chat = order is not None
-    else:
-        show_chat = False
-        can_chat = False
+        can_chat = show_chat
 
     chat_cnt = len(chat_orders) if role == 'contractor' else 1
+
+    rated = False
+    if order and role == 'customer':
+        from app.models import Rating
+        rated = Rating.query.filter_by(order_id=order.id, customer_id=current_user.id).first() is not None
+
 
     return render_template(
         'offer_detail.html',
@@ -338,7 +347,8 @@ def offer_detail(offer_id):
         chats     = chat_orders if role == 'contractor' else [],
         chat_cnt  = chat_cnt,
         show_chat = show_chat,
-        can_chat  = can_chat
+        can_chat  = can_chat,
+        rated     = rated  # <-- ОБОВ’ЯЗКОВО!
     )
 
 
@@ -538,57 +548,51 @@ def ship_order(order_id):
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id)) 
 
-# ------------------ Оцінити клієнта (друкар) ------------------
+# ------------------ Оцінити друкара ------------------
 @main.route('/order/<int:order_id>/rate', methods=['POST'])
 @login_required
 def rate_order(order_id):
-    """
-    Друкар ставить оцінку клієнту (1-5) після відправлення виробу.
-    Використовуємо таблицю Rating:
-        id, order_id, customer_id, contractor_id, score, created_at
-    """
     order = Order.query.get_or_404(order_id)
-
-    # доступ тільки друкарю з цього замовлення
-    if session.get('role') != 'contractor' or order.contractor_id != current_user.id:
+    # --- доступ лише для клієнта цього замовлення ---
+    if session.get('role') != 'customer' or order.customer_id != current_user.id:
         return "Доступ заборонено", 403
 
     if order.status != 'Відправлено':
-        return "Оцінку можна поставити лише після відправлення", 400
+        return "Оцінити можна тільки після відправки", 400
 
-    # якщо оцінку вже поставлено – забороняємо дублювання
-    if Rating.query.filter_by(order_id=order.id,
-                              contractor_id=current_user.id).first():
+    if Rating.query.filter_by(order_id=order.id, customer_id=current_user.id).first():
         return "Оцінку вже виставлено", 400
 
     try:
         score = int(request.form.get('score', 0))
     except ValueError:
         score = 0
-    score = max(1, min(score, 5))          # межі 1-5
+    score = max(1, min(score, 5))
 
-    r = Rating(order_id     = order.id,
-               customer_id  = order.customer_id,
-               contractor_id= current_user.id,
-               score        = score)
+    r = Rating(order_id=order.id,
+               customer_id=current_user.id,
+               contractor_id=order.contractor_id,
+               score=score)
     db.session.add(r)
 
-    # 👉 перераховуємо середній рейтинг клієнта
+    # Перерахунок середнього рейтингу для цього друкаря
     avg = db.session.query(db.func.avg(Rating.score)) \
-                    .filter(Rating.customer_id == order.customer_id) \
+                    .filter(Rating.contractor_id == order.contractor_id) \
                     .scalar() or 0
-    customer = Customer.query.get(order.customer_id)
-    customer.rating = round(avg, 2)
-
+    contractor = Contractor.query.get(order.contractor_id)
+    contractor.rating = round(avg, 2)
     db.session.commit()
-    return redirect(url_for('main.offer_detail',
-                            offer_id=order.offer_id,
-                            order   =order.id))
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return '', 204
+    return redirect(url_for('main.offer_detail', offer_id=order.offer_id, order=order.id))
+
 
 # ------------------ CHAT ------------------
 def _allowed(order):
     return ((session['role']=='customer'   and order.customer_id==current_user.id) or
             (session['role']=='contractor' and order.contractor_id==current_user.id))
+
 
 # GET історія
 @main.route('/order/<int:oid>/chat', methods=['GET'])

@@ -1,6 +1,9 @@
 {% extends "base.html" %}
 {% block title %}Пропозиція{% endblock %}
-
+{% block head %}
+  {{ super() }}
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/starability@2.4.0/starability-minified/starability-all.min.css">
+{% endblock %}
 {% block content %}
 <div class="card mb-5">
 
@@ -108,8 +111,39 @@
             <br><img class="img-fluid mt-2" src="{{ url_for('static', filename='examples/' ~ order.progress_image) }}">
           {% endif %}
         </div>
-      {% elif order.status == 'Відправлено' %}
+        {% elif order.status == 'Відправлено' %}
         <div class="alert alert-success mt-3">Виріб відправлено.</div>
+        {% if not rated %}
+        <form id="rate-form" method="post" action="{{ url_for('main.rate_order', order_id=order.id) }}" class="my-3">
+            <fieldset class="starability-grow">
+              <input type="radio" id="rate5" name="score" value="1" required />
+              <label for="rate5" title="1 зірок">1 зірок</label>
+              <input type="radio" id="rate4" name="score" value="2" />
+              <label for="rate4" title="2 зірки">2</label>
+              <input type="radio" id="rate3" name="score" value="3" />
+              <label for="rate3" title="3 зірки">3</label>
+              <input type="radio" id="rate2" name="score" value="4" />
+              <label for="rate2" title="4 зірки">4</label>
+              <input type="radio" id="rate1" name="score" value="5" />
+              <label for="rate1" title="5 зірка">5</label>
+            </fieldset>
+            <button type="submit" class="btn btn-warning btn-sm mt-2">Оцінити</button>
+          </form>
+          <script>
+          // AJAX без переходу
+          document.getElementById('rate-form')?.addEventListener('submit', function(e){
+            e.preventDefault();
+            fetch(this.action, {
+              method: 'POST',
+              body: new FormData(this),
+              headers: {'X-Requested-With': 'XMLHttpRequest'}
+            }).then(r=>r.ok && location.reload());
+          });
+          </script>
+        {% else %}
+          <div class="alert alert-info mt-2">Оцінка вже залишена. Дякуємо!</div>
+        {% endif %}
+      
       {% elif order.status == 'Відхилено' %}
         <div class="alert alert-danger mt-3">Відхилено: <b>{{ order.cancellation_reason }}</b></div>
       {% endif %}
