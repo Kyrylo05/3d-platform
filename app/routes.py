@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, session
 from flask import jsonify
+from sqlalchemy import func
 from flask_login import login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
@@ -181,8 +182,6 @@ def create_offer():
     # GET — показуємо форму зі списком MATERIALS
     return render_template('create_offer.html', materials=MATERIALS)
 
-
-
 # ------------------ Редагування пропозиції ------------------
 @main.route('/contractor/edit_offer/<int:offer_id>', methods=['GET', 'POST'])
 @login_required
@@ -243,7 +242,8 @@ def view_offers():
     if session.get('role') != 'customer':
         return "Доступ лише для замовників", 403
 
-    q = Offer.query
+    from sqlalchemy.orm import joinedload
+    q = Offer.query.options(joinedload(Offer.contractor))
 
     # ---- фільтрація ----
     material = request.args.get('material')
@@ -254,13 +254,37 @@ def view_offers():
     if max_price is not None:
         q = q.filter(Offer.price_per_gram <= max_price)
 
+    # === Новий фільтр: рейтинг ===
+    min_rating = request.args.get('min_rating', type=float)
+    if min_rating is not None:
+        q = q.join(Offer.contractor).filter(Contractor.rating >= min_rating)
+
     sort = request.args.get('sort')
     if sort == 'price_asc':
         q = q.order_by(Offer.price_per_gram.asc())
     elif sort == 'price_desc':
         q = q.order_by(Offer.price_per_gram.desc())
+    elif sort == 'rating_desc':
+        q = q.join(Offer.contractor).order_by(Contractor.rating.desc())
+    elif sort == 'rating_asc':
+        q = q.join(Offer.contractor).order_by(Contractor.rating.asc())
+    elif sort == 'value':
+        max_price = db.session.query(func.max(Offer.price_per_gram)).scalar() or 1
+        q = q.join(Offer.contractor)\
+            .add_columns((0.5*Contractor.rating + 0.5*(max_price/Offer.price_per_gram)).label('value_score'))\
+            .order_by(db.desc('value_score'))
 
-    offers = q.all()
+       # Якщо повернувся кортеж/Row — дістаємо перший елемент (Offer)
+    offers = []
+    for o in q.all():
+        # Якщо це кортеж (tuple)
+        if isinstance(o, tuple):
+            offers.append(o[0])
+        # Якщо це Row (новий SQLAlchemy)
+        elif hasattr(o, '_mapping') and hasattr(o, '_fields'):
+            offers.append(getattr(o, o._fields[0]))
+        else:
+            offers.append(o)
 
     # список унікальних матеріалів для фільтра
     materials = db.session.query(Offer.material).distinct().order_by(Offer.material).all()
@@ -270,7 +294,6 @@ def view_offers():
                            offers=offers,
                            materials=materials,
                            static_files=set(os.listdir('app/static/examples')))
-
 
 # ------------------ Детальна сторінка пропозиції ------------------
 @main.route('/offer/<int:offer_id>')
