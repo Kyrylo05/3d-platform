@@ -25,14 +25,14 @@
 
     <div class="col-md-4 mb-4">
       <div class="card h-100 shadow-sm {{ cl }}">
-        {# ─── 1-a. Заголовок картки ─── #}
+        {# ───  Заголовок картки ─── #}
         <div class="card-header d-flex align-items-center bg-white">
           <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
                width="50" height="50" class="rounded-circle mr-2" style="object-fit:cover">
           <h5 class="mb-0">{{ user.company_name }}</h5>
         </div>
 
-        {# ─── 1-b. Слайдер ─── #}
+        {# ─── Слайдер ─── #}
         <div id="carousel{{ offer.id }}" class="carousel slide" data-ride="carousel">
           <div class="carousel-inner">
             {% for i in range(1,4) %}
@@ -51,7 +51,7 @@
           </a>
         </div>
 
-        {# ─── 1-c. Характеристики ─── #}
+        {# ───  Характеристики ─── #}
         <div class="card-body">
           <h5 class="text-primary">{{ offer.material }}</h5>
           <p><b>Товщина шару:</b> {{ offer.layer_height }} мм</p>
@@ -59,7 +59,7 @@
           <h4 class="text-success text-center">{{ offer.price_per_gram }} грн/г</h4>
         </div>
 
-        {# ─── 1-d. Кнопки ─── #}
+        {# ─── Кнопки ─── #}
         <div class="card-footer bg-white">
           <div class="row">
             <div class="col-12 mb-2">

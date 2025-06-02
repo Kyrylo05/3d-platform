@@ -38,7 +38,7 @@ class Offer(db.Model):
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stl_filename = db.Column(db.String(255), nullable=False)
-    progress_image = db.Column(db.String(255))          # 🆕 фото готової деталі
+    progress_image = db.Column(db.String(255)) # фото готової деталі
     estimated_weight = db.Column(db.Float)
     estimated_price = db.Column(db.Float)
     status = db.Column(db.String(50), default='Очікує підтвердження')
@@ -52,19 +52,13 @@ class Order(db.Model):
     cancellation_reason = db.Column(db.String(500))
     is_cancelled = db.Column(db.Boolean, default=False)
     messages = db.relationship('ChatMessage', backref='order', lazy=True)  
-# ⬇ додай наприкінці файлу
 class ChatMessage(db.Model):
     id          = db.Column(db.Integer, primary_key=True)
     order_id    = db.Column(db.Integer, db.ForeignKey('order.id'))
     sender_id   = db.Column(db.Integer)
-    sender_role = db.Column(db.String(20))      # 'customer' | 'contractor'
+    sender_role = db.Column(db.String(20))     
     text        = db.Column(db.Text, nullable=False)
     created_at  = db.Column(db.DateTime, default=datetime.utcnow)
-
-# ⬇ в Order додай/залиш
-progress_image      = db.Column(db.String(255))
-cancellation_reason = db.Column(db.String(500))
-messages = db.relationship('ChatMessage', backref='order', lazy=True)
 
 class Rating(db.Model):
     id            = db.Column(db.Integer, primary_key=True)

@@ -9,7 +9,7 @@ from flask import Blueprint, render_template, request, redirect, url_for, sessio
 from sqlalchemy import and_
 import os
 
-# --- перелік стандартних матеріалів 3D-друку (можеш редагувати) ---
+#перелік стандартних матеріалів 3D-друку 
 MATERIALS = ["PLA", "ABS", "PETG", "TPU", "Nylon", "Resin", "ASA", "PC"]
 
 ACTIVE_STATUSES = (
@@ -23,7 +23,7 @@ from app.models import db, Customer, Contractor, Offer, Order
 
 main = Blueprint('main', __name__)
 
-# ------------------ Головна ------------------
+#  Головна 
 @main.route('/')
 def home():
     stats = {
@@ -33,7 +33,7 @@ def home():
     }
     return render_template('index.html', stats=stats)
 
-# ------------------ Реєстрація (обʼєднана) ------------------
+#  Реєстрація 
 @main.route('/register', methods=['GET', 'POST'])
 def register():
     role = request.args.get('role')  # ?role=customer | ?role=contractor
@@ -75,7 +75,7 @@ def register():
 
     return render_template('register.html', role=role)
 
-# ------------------ Вхід (обʼєднаний) ------------------
+#  Вхід  
 @main.route('/login', methods=['GET', 'POST'])
 def login():
     role = request.args.get('role') or session.get('role')
@@ -98,7 +98,7 @@ def login():
 
     return render_template('login.html', role=role)
 
-# ------------------ Кабінет ------------------
+#  Кабінет 
 @main.route('/dashboard/<role>')
 @login_required
 def dashboard(role):
@@ -129,7 +129,7 @@ def dashboard(role):
     return "Невідома роль", 404
 
 
-# ------------------ Вихід ------------------
+#  Вихід 
 @main.route('/logout')
 @login_required
 def logout():
@@ -138,7 +138,7 @@ def logout():
     return redirect(url_for('main.home'))
 
 
-# ------------------ Створення пропозиції ------------------
+#  Створення пропозиції 
 @main.route('/contractor/create_offer', methods=['GET', 'POST'])
 @login_required
 def create_offer():
@@ -146,7 +146,7 @@ def create_offer():
         return "Доступ лише для друкарів", 403
 
     if request.method == 'POST':
-        # якщо обрано «other» — забираємо текст із поля material_other
+        # якщо обрано other — забираємо текст із поля material_other
         material = request.form.get('material')
         if material == 'other':
             material = request.form.get('material_other', '').strip() or 'Other'
@@ -167,7 +167,7 @@ def create_offer():
         db.session.add(offer)
         db.session.commit()
 
-        # зберігаємо до 10 фотографій-прикладів (можеш змінити ліміт)
+        # зберігаємо до 10 фотографій-прикладів 
         files         = request.files.getlist('images')
         examples_path = os.path.join('app', 'static', 'examples')
         os.makedirs(examples_path, exist_ok=True)
@@ -182,7 +182,7 @@ def create_offer():
     # GET — показуємо форму зі списком MATERIALS
     return render_template('create_offer.html', materials=MATERIALS)
 
-# ------------------ Редагування пропозиції ------------------
+#  Редагування пропозиції 
 @main.route('/contractor/edit_offer/<int:offer_id>', methods=['GET', 'POST'])
 @login_required
 def edit_offer(offer_id):
@@ -204,7 +204,7 @@ def edit_offer(offer_id):
         offer.max_size       = request.form['max_size']
         offer.min_size       = request.form['min_size']
 
-        # якщо завантажені нові фото — перезаписуємо (теж до 10 шт.)
+        # якщо завантажені нові фото — перезаписуємо (теж до 10)
         files = request.files.getlist('images')
         if files and any(f.filename for f in files):
             examples_path = os.path.join('app', 'static', 'examples')
@@ -220,7 +220,7 @@ def edit_offer(offer_id):
     # GET — показуємо форму, передаючи список MATERIALS і сам offer
     return render_template('edit_offer.html', offer=offer, materials=MATERIALS)
 
-# ------------------ Видалення пропозиції ------------------
+#  Видалення пропозиції 
 @main.route('/contractor/delete_offer/<int:offer_id>', methods=['POST'])
 @login_required
 def delete_offer(offer_id):
@@ -235,7 +235,7 @@ def delete_offer(offer_id):
     db.session.commit()
     return redirect(url_for('main.dashboard', role='contractor'))
 
-# ------------------ Перегляд пропозицій ------------------
+#  Перегляд пропозицій 
 @main.route('/offers')
 @login_required
 def view_offers():
@@ -245,7 +245,7 @@ def view_offers():
     from sqlalchemy.orm import joinedload
     q = Offer.query.options(joinedload(Offer.contractor))
 
-    # ---- фільтрація ----
+    #  фільтрація
     material = request.args.get('material')
     if material:
         q = q.filter_by(material=material)
@@ -254,7 +254,7 @@ def view_offers():
     if max_price is not None:
         q = q.filter(Offer.price_per_gram <= max_price)
 
-    # === Новий фільтр: рейтинг ===
+    #  фільтр: рейтинг
     min_rating = request.args.get('min_rating', type=float)
     if min_rating is not None:
         q = q.join(Offer.contractor).filter(Contractor.rating >= min_rating)
@@ -295,7 +295,7 @@ def view_offers():
                            materials=materials,
                            static_files=set(os.listdir('app/static/examples')))
 
-# ------------------ Детальна сторінка пропозиції ------------------
+#  Детальна сторінка пропозиції 
 @main.route('/offer/<int:offer_id>')
 @login_required
 def offer_detail(offer_id):
@@ -306,7 +306,7 @@ def offer_detail(offer_id):
     order       = None
     chat_orders = []
 
-    # --- ДЛЯ ЗАМОВНИКА ---
+    #  ДЛЯ ЗАМОВНИКА 
     if role == 'customer':
         # Беремо будь-яке останнє замовлення (Draft теж підходить)
         order = (Order.query
@@ -371,11 +371,11 @@ def offer_detail(offer_id):
         chat_cnt  = chat_cnt,
         show_chat = show_chat,
         can_chat  = can_chat,
-        rated     = rated  # <-- ОБОВ’ЯЗКОВО!
+        rated     = rated  
     )
 
 
-# ------------------ Створення / повторне створення замовлення ------------------
+#  Створення / повторне створення замовлення 
 @main.route('/order/create/<int:offer_id>', methods=['GET', 'POST'])
 @login_required
 def create_order(offer_id):
@@ -384,7 +384,7 @@ def create_order(offer_id):
 
     offer = Offer.query.get_or_404(offer_id)
 
-    # ───────────── POST ─────────────
+    #  POST 
     if request.method == 'POST':
         file = request.files.get('stl_file')
         if not file or not file.filename.endswith('.stl'):
@@ -414,7 +414,7 @@ def create_order(offer_id):
                     .order_by(Order.timestamp.desc())
                     .first())
 
-        # ── зберігаємо файл ──
+        #  зберігаємо файл 
         stl_dir  = os.path.join('app', 'static', 'stl_files')
         os.makedirs(stl_dir, exist_ok=True)
         filename = secure_filename(file.filename)
@@ -450,11 +450,11 @@ def create_order(offer_id):
         return redirect(url_for('main.offer_detail',
                                 offer_id = offer.id,
                                 order    = oid))
-    # ───────────── GET ─────────────
+    #  GET 
     return render_template('create_order.html', offer=offer)
 
 
-# ------------------ Редагування профілю ------------------
+#  Редагування профілю 
 @main.route('/profile/<role>', methods=['GET', 'POST'])
 @login_required
 def edit_profile(role):
@@ -486,7 +486,7 @@ def edit_profile(role):
 
     return render_template('edit_profile.html', user=user, role=role)
 
-# ------------------ Перегляд чужого профілю ------------------
+#  Перегляд чужого профілю 
 @main.route('/profile/view/<int:user_id>')
 @login_required
 def view_profile(user_id):
@@ -498,7 +498,7 @@ def view_profile(user_id):
     user = Customer.query.get_or_404(user_id)
     return render_template('view_profile.html', user=user, role='customer')
 
-# ------------------ Прийняти замовлення ------------------
+#  Прийняти замовлення 
 @main.route('/order/<int:order_id>/accept', methods=['POST'])
 @login_required
 def accept_order(order_id):
@@ -510,7 +510,7 @@ def accept_order(order_id):
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
 
-# ------------------ Відхилити замовлення ------------------
+#  Відхилити замовлення 
 @main.route('/order/<int:order_id>/reject', methods=['POST'])
 @login_required
 def reject_order(order_id):
@@ -526,7 +526,7 @@ def reject_order(order_id):
     order.cancellation_reason = reason
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
-# ------------------ Завершити друк ------------------
+#  Завершити друк 
 @main.route('/order/<int:order_id>/finish', methods=['POST'])
 @login_required
 def finish_print(order_id):
@@ -546,7 +546,7 @@ def finish_print(order_id):
         order.progress_image = fname
 
 
-        # 🆕 додаємо повідомлення‑картинку в чат
+        #  додаємо повідомлення‑картинку в чат
         img_msg = ChatMessage(
             order_id    = order.id,
             sender_id   = current_user.id,
@@ -559,7 +559,7 @@ def finish_print(order_id):
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
 
-# ------------------ Відправити поштою ------------------
+#  Відправити поштою 
 @main.route('/order/<int:order_id>/ship', methods=['POST'])
 @login_required
 def ship_order(order_id):
@@ -571,12 +571,12 @@ def ship_order(order_id):
     db.session.commit()
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id)) 
 
-# ------------------ Оцінити друкара ------------------
+#  Оцінити друкара 
 @main.route('/order/<int:order_id>/rate', methods=['POST'])
 @login_required
 def rate_order(order_id):
     order = Order.query.get_or_404(order_id)
-    # --- доступ лише для клієнта цього замовлення ---
+    #  доступ лише для клієнта цього  
     if session.get('role') != 'customer' or order.customer_id != current_user.id:
         return "Доступ заборонено", 403
 
@@ -611,7 +611,7 @@ def rate_order(order_id):
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id, order=order.id))
 
 
-# ------------------ CHAT ------------------
+#  CHAT 
 def _allowed(order):
     return ((session['role']=='customer'   and order.customer_id==current_user.id) or
             (session['role']=='contractor' and order.contractor_id==current_user.id))

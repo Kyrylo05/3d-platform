@@ -8,7 +8,6 @@
   <p><strong>Пропозиція від {{ offer.contractor.company_name }} ({{ offer.material }})</strong></p>
   <p>Ціна за грам: {{ offer.price_per_gram }} грн</p>
 
-  <!-- Весь вміст має бути всередині <form> -->
   <form action="{{ url_for('main.create_order', offer_id=offer.id) }}" method="POST" enctype="multipart/form-data">
     
     <!-- Адреса доставки -->
