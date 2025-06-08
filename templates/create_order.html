@@ -1,30 +1,57 @@
-{% extends "base.html" %}
-{% block title %}Оформлення замовлення{% endblock %}
-
+{% extends "base.html" %} {% block title %}Оформлення замовлення{% endblock %}
 {% block content %}
 <div class="container">
   <h2 class="mb-4">Оформлення замовлення</h2>
 
-  <p><strong>Пропозиція від {{ offer.contractor.company_name }} ({{ offer.material }})</strong></p>
+  <p>
+    <strong
+      >Пропозиція від {{ offer.contractor.company_name }} ({{ offer.material
+      }})</strong
+    >
+  </p>
   <p>Ціна за грам: {{ offer.price_per_gram }} грн</p>
 
   <!-- Весь вміст має бути всередині <form> -->
-  <form action="{{ url_for('main.create_order', offer_id=offer.id) }}" method="POST" enctype="multipart/form-data">
-    
+  <form
+    action="{{ url_for('main.create_order', offer_id=offer.id) }}"
+    method="POST"
+    enctype="multipart/form-data"
+  >
     <!-- Адреса доставки -->
     <div class="form-group">
       <label for="delivery_info">Доставка (пошта, місто, відділення):</label>
-      <input type="text" id="delivery_info" name="delivery_info" class="form-control" placeholder="Нова Пошта, Львів, №15" required>
+      <input
+        type="text"
+        id="delivery_info"
+        name="delivery_info"
+        class="form-control"
+        placeholder="Нова Пошта, Львів, №15"
+        required
+      />
     </div>
 
     <!-- Область завантаження STL -->
     <div class="form-group">
       <label for="stl_file">STL-файл:</label>
-      <div id="drop_zone"
-           style="border: 3px dashed #007BFF; padding: 40px; text-align: center; cursor: pointer;">
+      <div
+        id="drop_zone"
+        style="
+          border: 3px dashed #007bff;
+          padding: 40px;
+          text-align: center;
+          cursor: pointer;
+        "
+      >
         Перетягніть STL-файл сюди або натисніть для вибору
       </div>
-      <input type="file" id="stl_file" name="stl_file" accept=".stl" hidden required>
+      <input
+        type="file"
+        id="stl_file"
+        name="stl_file"
+        accept=".stl"
+        hidden
+        required
+      />
     </div>
 
     <button type="submit" class="btn btn-success">Підтвердити</button>
@@ -32,29 +59,29 @@
 </div>
 
 <script>
-const dropZone = document.getElementById('drop_zone');
-const fileInput = document.getElementById('stl_file');
+  const dropZone = document.getElementById("drop_zone");
+  const fileInput = document.getElementById("stl_file");
 
-dropZone.addEventListener('click', () => fileInput.click());
+  dropZone.addEventListener("click", () => fileInput.click());
 
-dropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  dropZone.style.backgroundColor = '#e8f0fe';
-});
+  dropZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    dropZone.style.backgroundColor = "#e8f0fe";
+  });
 
-dropZone.addEventListener('dragleave', () => {
-  dropZone.style.backgroundColor = '';
-});
+  dropZone.addEventListener("dragleave", () => {
+    dropZone.style.backgroundColor = "";
+  });
 
-dropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  fileInput.files = e.dataTransfer.files;
-  dropZone.textContent = `Вибрано файл: ${e.dataTransfer.files[0].name}`;
-  dropZone.style.backgroundColor = '';
-});
+  dropZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    fileInput.files = e.dataTransfer.files;
+    dropZone.textContent = `Вибрано файл: ${e.dataTransfer.files[0].name}`;
+    dropZone.style.backgroundColor = "";
+  });
 
-fileInput.addEventListener('change', (e) => {
-  dropZone.textContent = `Вибрано файл: ${e.target.files[0].name}`;
-});
+  fileInput.addEventListener("change", (e) => {
+    dropZone.textContent = `Вибрано файл: ${e.target.files[0].name}`;
+  });
 </script>
 {% endblock %}

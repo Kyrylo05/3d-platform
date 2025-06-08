@@ -1,42 +1,39 @@
-{% extends "base.html" %}
-{% block title %}Реєстрація{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Реєстрація{% endblock %} {% block
+content %}
 <div class="container mt-5">
   <h2 class="text-center mb-4">
-    Реєстрація 
-    {% if role == 'customer' %}Замовника{% else %}Друкаря{% endif %}
+    Реєстрація {% if role == 'customer' %}Замовника{% else %}Друкаря{% endif %}
   </h2>
 
   <form method="POST" enctype="multipart/form-data">
     <div class="form-group">
       <label>Ім'я (або назва компанії)</label>
-      <input type="text" name="name" class="form-control" required>
+      <input type="text" name="name" class="form-control" required />
     </div>
 
     <div class="form-group">
       <label>Фото профілю</label>
-      <input type="file" name="profile_image" class="form-control-file">
+      <input type="file" name="profile_image" class="form-control-file" />
     </div>
 
     <div class="form-group">
       <label>Email</label>
-      <input type="email" name="email" class="form-control" required>
+      <input type="email" name="email" class="form-control" required />
     </div>
 
     <div class="form-group">
       <label>Пароль</label>
-      <input type="password" name="password" class="form-control" required>
+      <input type="password" name="password" class="form-control" required />
     </div>
 
     <div class="form-group">
       <label>Підтвердження пароля</label>
-      <input type="password" name="confirm" class="form-control" required>
+      <input type="password" name="confirm" class="form-control" required />
     </div>
 
     <button type="submit" class="btn btn-primary btn-block">
-      Зареєструватися 
-      {% if role == 'customer' %}як Замовник{% else %}як Друкар{% endif %}
+      Зареєструватися {% if role == 'customer' %}як Замовник{% else %}як
+      Друкар{% endif %}
     </button>
   </form>
 

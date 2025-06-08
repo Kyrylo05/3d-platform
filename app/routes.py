@@ -538,25 +538,24 @@ def finish_print(order_id):
     if not file or not file.filename:
         return "Потрібно додати фото звіту!", 400
 
-        examples_path = os.path.join('app', 'static', 'examples')
-        os.makedirs(examples_path, exist_ok=True)          # ← гарантуємо директорію
+    examples_path = os.path.join('app', 'static', 'examples')
+    os.makedirs(examples_path, exist_ok=True)
 
-        fname = f'order_{order.id}_progress.jpg'
-        file.save(os.path.join(examples_path, fname))
-        order.progress_image = fname
+    fname = f'order_{order.id}_progress.jpg'
+    file.save(os.path.join(examples_path, fname))
+    order.progress_image = fname
 
-
-        # 🆕 додаємо повідомлення‑картинку в чат
-        img_msg = ChatMessage(
-            order_id    = order.id,
-            sender_id   = current_user.id,
-            sender_role = 'contractor',
-            text        = '[img]' + fname        # спец‑тег
-        )
-        db.session.add(img_msg)
+    img_msg = ChatMessage(
+        order_id    = order.id,
+        sender_id   = current_user.id,
+        sender_role = 'contractor',
+        text        = '[img]' + fname
+    )
+    db.session.add(img_msg)
 
     order.status = "Друк завершено"
     db.session.commit()
+
     return redirect(url_for('main.offer_detail', offer_id=order.offer_id))
 
 # ------------------ Відправити поштою ------------------

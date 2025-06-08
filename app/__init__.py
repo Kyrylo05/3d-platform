@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 
-
 db = SQLAlchemy()
 login_manager = LoginManager()
 login_manager.login_view = 'main.login'  # Якщо не залогінений, редірект сюди
@@ -21,7 +20,6 @@ def create_app():
     db.init_app(app)
     migrate = Migrate(app, db)
     login_manager.init_app(app)
-    
 
     # Щоб уникнути циклічного імпорту
     from app.models import Customer, Contractor

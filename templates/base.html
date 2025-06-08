@@ -1,81 +1,108 @@
 <!DOCTYPE html>
 <html lang="uk">
-<head>
-  <meta charset="UTF-8">
-  <title>{% block title %}3D Платформа{% endblock %}</title>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{% block title %}3D Платформа{% endblock %}</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
 
-  {% block head %}{% endblock %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  <!-- цірочки -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/starability/starability-all.min.css">
+    {% block head %}{% endblock %}
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+    <!-- цірочки -->
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/starability/starability-all.min.css"
+    />
 
-  <script src="https://cdn.jsdelivr.net/npm/fslightbox/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fslightbox/index.js"></script>
+  </head>
 
-</head>
+  <body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+      <a class="navbar-brand" href="/">3D Платформа</a>
+      <button
+        class="navbar-toggler"
+        type="button"
+        data-toggle="collapse"
+        data-target="#navbarNav"
+        aria-controls="navbarNav"
+        aria-expanded="false"
+        aria-label="Навігація"
+      >
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-<body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <a class="navbar-brand" href="/">3D Платформа</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Навігація">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav ml-auto">
-
-        {% if current_user.is_authenticated %}
-          {% if session.get('role') == 'customer' %}
-            <!-- Меню Замовника -->
-            <li class="nav-item">
-              <a class="nav-link" href="/offers">Переглянути пропозиції</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/profile/customer">Мій профіль</a>
-            </li>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ml-auto">
+          {% if current_user.is_authenticated %} {% if session.get('role') ==
+          'customer' %}
+          <!-- Меню Замовника -->
+          <li class="nav-item">
+            <a class="nav-link" href="/offers">Переглянути пропозиції</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/profile/customer">Мій профіль</a>
+          </li>
           {% elif session.get('role') == 'contractor' %}
-            <!-- Меню Друкаря -->
-            <li class="nav-item">
-              <a class="nav-link" href="/dashboard/contractor">Мій кабінет</a>
-            </li>
-            <li class="nav-item">
-              <a class="nav-link" href="/profile/contractor">Мій профіль</a>
-            </li>
+          <!-- Меню Друкаря -->
+          <li class="nav-item">
+            <a class="nav-link" href="/dashboard/contractor">Мій кабінет</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/profile/contractor">Мій профіль</a>
+          </li>
           {% endif %}
           <li class="nav-item">
             <a class="nav-link" href="/logout">Вихід</a>
           </li>
-        {% else %}
+          {% else %}
           <!-- Для гостей -->
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="loginDropdown" data-toggle="dropdown">Увійти</a>
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="loginDropdown"
+              data-toggle="dropdown"
+              >Увійти</a
+            >
             <div class="dropdown-menu">
               <a class="dropdown-item" href="/login?role=customer">Замовник</a>
               <a class="dropdown-item" href="/login?role=contractor">Друкар</a>
             </div>
           </li>
           <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="registerDropdown" data-toggle="dropdown">Реєстрація</a>
+            <a
+              class="nav-link dropdown-toggle"
+              href="#"
+              id="registerDropdown"
+              data-toggle="dropdown"
+              >Реєстрація</a
+            >
             <div class="dropdown-menu">
-              <a class="dropdown-item" href="/register?role=customer">Замовник</a>
-              <a class="dropdown-item" href="/register?role=contractor">Друкар</a>
+              <a class="dropdown-item" href="/register?role=customer"
+                >Замовник</a
+              >
+              <a class="dropdown-item" href="/register?role=contractor"
+                >Друкар</a
+              >
             </div>
           </li>
-        {% endif %}
+          {% endif %}
+        </ul>
+      </div>
+    </nav>
 
-      </ul>
-    </div>
-  </nav>
+    <div class="container mt-4">{% block content %}{% endblock %}</div>
 
-  <div class="container mt-4">
-    {% block content %}{% endblock %}
-  </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
-  {% block scripts %}{% endblock %}
-</body>
+    {% block scripts %}{% endblock %}
+  </body>
 </html>

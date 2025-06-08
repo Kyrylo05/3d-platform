@@ -1,30 +1,45 @@
-{% extends "base.html" %}
-{% block title %}Редагувати профіль{% endblock %}
-
-{% block content %}
+{% extends "base.html" %} {% block title %}Редагувати профіль{% endblock %} {%
+block content %}
 <div class="container mt-4">
   <h2>Редагування профілю</h2>
 
   <form method="POST" enctype="multipart/form-data">
     <div class="form-group">
       <!-- Поточне фото -->
-      <label>Поточне фото:</label><br>
-      <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
-           class="rounded-circle mb-2" width="80" height="80" style="object-fit: cover;">
+      <label>Поточне фото:</label><br />
+      <img
+        src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
+        class="rounded-circle mb-2"
+        width="80"
+        height="80"
+        style="object-fit: cover"
+      />
     </div>
 
     <div class="form-group">
       <label>Нове фото</label>
-      <input type="file" name="profile_image" class="form-control-file">
+      <input type="file" name="profile_image" class="form-control-file" />
     </div>
 
     <div class="form-group">
       {% if role=='customer' %}
-        <label>Ім'я та прізвище</label>
-        <input type="text" name="name" class="form-control" value="{{ user.full_name }}">
+      <label
+        >Ім'я та прізвище</label
+      >
+      <input
+        type="text"
+        name="name"
+        class="form-control"
+        value="{{ user.full_name }}"
+      />
       {% else %}
-        <label>Назва компанії</label>
-        <input type="text" name="name" class="form-control" value="{{ user.company_name }}">
+      <label>Назва компанії</label>
+      <input
+        type="text"
+        name="name"
+        class="form-control"
+        value="{{ user.company_name }}"
+      />
       {% endif %}
     </div>
 

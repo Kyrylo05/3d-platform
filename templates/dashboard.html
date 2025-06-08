@@ -1,8 +1,6 @@
-{# ==========================  BASE  =================================== #}
-{% extends "base.html" %}
-{% block title %}Кабінет друкаря{% endblock %}
-
-{% block content %}
+{# ========================== BASE =================================== #} {%
+extends "base.html" %} {% block title %}Кабінет друкаря{% endblock %} {% block
+content %}
 <h2 class="mb-4">Кабінет друкаря</h2>
 <a href="{{ url_for('main.create_offer') }}" class="btn btn-success mb-4">
   Створити пропозицію
@@ -11,123 +9,152 @@
 {# ===================== 1. МОЇ ПРОПОЗИЦІЇ ============================ #}
 <h4 class="mb-3">Мої пропозиції</h4>
 <div class="row">
-  {% for offer in offers %}
-    {# ------- підсвічуємо картку за останнім замовленням -------- #}
-    {% set last = offer.orders | sort(attribute='timestamp') | last %}
-    {% if last %}
-      {% set hrs = ((now - last.timestamp).total_seconds() // 3600) | int %}
-      {% set cl  = 'bg-danger'   if hrs < 1
-                else 'bg-warning' if hrs < 16
-                else '' %}
-    {% else %}
-      {% set cl = '' %}
-    {% endif %}
+  {% for offer in offers %} {# ------- підсвічуємо картку за останнім
+  замовленням -------- #} {% set last = offer.orders |
+  sort(attribute='timestamp') | last %} {% if last %} {% set hrs = ((now -
+  last.timestamp).total_seconds() // 3600) | int %} {% set cl = 'bg-danger' if
+  hrs < 1 else 'bg-warning' if hrs < 16 else '' %} {% else %} {% set cl = '' %}
+  {% endif %}
 
-    <div class="col-md-4 mb-4">
-      <div class="card h-100 shadow-sm {{ cl }}">
-        {# ─── 1-a. Заголовок картки ─── #}
-        <div class="card-header d-flex align-items-center bg-white">
-          <img src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
-               width="50" height="50" class="rounded-circle mr-2" style="object-fit:cover">
-          <h5 class="mb-0">{{ user.company_name }}</h5>
-        </div>
+  <div class="col-md-4 mb-4">
+    <div class="card h-100 shadow-sm {{ cl }}">
+      {# ─── 1-a. Заголовок картки ─── #}
+      <div class="card-header d-flex align-items-center bg-white">
+        <img
+          src="{{ url_for('static', filename='uploads/' ~ user.profile_image) }}"
+          width="50"
+          height="50"
+          class="rounded-circle mr-2"
+          style="object-fit: cover"
+        />
+        <h5 class="mb-0">{{ user.company_name }}</h5>
+      </div>
 
-        {# ─── 1-b. Слайдер ─── #}
-        <div id="carousel{{ offer.id }}" class="carousel slide" data-ride="carousel">
-          <div class="carousel-inner">
-            {% for i in range(1,4) %}
-              <div class="carousel-item {% if i==1 %}active{% endif %}">
-                <img src="{{ url_for('static',
+      {# ─── 1-b. Слайдер ─── #}
+      <div
+        id="carousel{{ offer.id }}"
+        class="carousel slide"
+        data-ride="carousel"
+      >
+        <div class="carousel-inner">
+          {% for i in range(1,4) %}
+          <div class="carousel-item {% if i==1 %}active{% endif %}">
+            <img
+              src="{{ url_for('static',
                                      filename='examples/offer_' ~ offer.id ~ '_example_' ~ i ~ '.jpg') }}"
-                     class="d-block w-100" style="height:180px;object-fit:cover">
-              </div>
-            {% endfor %}
+              class="d-block w-100"
+              style="height: 180px; object-fit: cover"
+            />
           </div>
-          <a class="carousel-control-prev" href="#carousel{{ offer.id }}" data-slide="prev">
-            <span class="carousel-control-prev-icon"></span>
-          </a>
-          <a class="carousel-control-next" href="#carousel{{ offer.id }}" data-slide="next">
-            <span class="carousel-control-next-icon"></span>
-          </a>
+          {% endfor %}
         </div>
+        <a
+          class="carousel-control-prev"
+          href="#carousel{{ offer.id }}"
+          data-slide="prev"
+        >
+          <span class="carousel-control-prev-icon"></span>
+        </a>
+        <a
+          class="carousel-control-next"
+          href="#carousel{{ offer.id }}"
+          data-slide="next"
+        >
+          <span class="carousel-control-next-icon"></span>
+        </a>
+      </div>
 
-        {# ─── 1-c. Характеристики ─── #}
-        <div class="card-body">
-          <h5 class="text-primary">{{ offer.material }}</h5>
-          <p><b>Товщина шару:</b> {{ offer.layer_height }} мм</p>
-          <p><b>Розміри:</b> {{ offer.min_size }} – {{ offer.max_size }}</p>
-          <h4 class="text-success text-center">{{ offer.price_per_gram }} грн/г</h4>
-        </div>
+      {# ─── 1-c. Характеристики ─── #}
+      <div class="card-body">
+        <h5 class="text-primary">{{ offer.material }}</h5>
+        <p><b>Товщина шару:</b> {{ offer.layer_height }} мм</p>
+        <p><b>Розміри:</b> {{ offer.min_size }} – {{ offer.max_size }}</p>
+        <h4 class="text-success text-center">
+          {{ offer.price_per_gram }} грн/г
+        </h4>
+      </div>
 
-        {# ─── 1-d. Кнопки ─── #}
-        <div class="card-footer bg-white">
-          <div class="row">
-            <div class="col-12 mb-2">
-              {% if last and offer.id %}
-                <a href="{{ url_for('main.offer_detail',
+      {# ─── 1-d. Кнопки ─── #}
+      <div class="card-footer bg-white">
+        <div class="row">
+          <div class="col-12 mb-2">
+            {% if last and offer.id %}
+            <a
+              href="{{ url_for('main.offer_detail',
                                     offer_id=offer.id,
                                     order=last.id) }}"
-                   class="btn btn-outline-primary btn-block">
-                  Детальніше
-                </a>
-              {% else %}
-                <a href="{{ url_for('main.offer_detail',
+              class="btn btn-outline-primary btn-block"
+            >
+              Детальніше
+            </a>
+            {% else %}
+            <a
+              href="{{ url_for('main.offer_detail',
                                     offer_id=offer.id) }}"
-                   class="btn btn-outline-primary btn-block">
-                  Детальніше
-                </a>
-              {% endif %}
-            </div>
-            <div class="col-6 pr-1">
-              <a href="{{ url_for('main.edit_offer', offer_id=offer.id) }}"
-                 class="btn btn-info btn-block">Редагувати</a>
-            </div>
-            <div class="col-6 pl-1">
-              <form method="POST"
-      action="{{ url_for('main.delete_offer', offer_id=offer.id) }}">
-
-                <button class="btn btn-danger btn-block">Видалити</button>
-              </form>
-            </div>
+              class="btn btn-outline-primary btn-block"
+            >
+              Детальніше
+            </a>
+            {% endif %}
+          </div>
+          <div class="col-6 pr-1">
+            <a
+              href="{{ url_for('main.edit_offer', offer_id=offer.id) }}"
+              class="btn btn-info btn-block"
+              >Редагувати</a
+            >
+          </div>
+          <div class="col-6 pl-1">
+            <form
+              method="POST"
+              action="{{ url_for('main.delete_offer', offer_id=offer.id) }}"
+            >
+              <button class="btn btn-danger btn-block">Видалити</button>
+            </form>
           </div>
         </div>
-
       </div>
     </div>
+  </div>
   {% endfor %}
 </div>
 
-{# ===================== 2. ЧАТИ З КЛІЄНТАМИ ========================== #}
-{% if chats %}
-  <h4 class="mt-5 mb-3">Чати з клієнтами</h4>
-  <table class="table table-sm table-hover">
-    <thead style="background-color: #2e2e32; color: var(--accent);">
-      <tr><th>Клієнт</th><th>Статус</th><th>Дата</th><th></th></tr>
-    </thead>
-    <tbody>
-      {% for o in chats %}
-        <tr>
-          <td>{{ o.customer.full_name }}</td>
-          <td>{{ o.status }}</td>
-          <td>{{ o.timestamp.strftime('%d.%m %H:%M') }}</td>
-          <td>
-            {% if o.offer_id %}
-              <a href="{{ url_for('main.offer_detail',
+{# ===================== 2. ЧАТИ З КЛІЄНТАМИ ========================== #} {% if
+chats %}
+<h4 class="mt-5 mb-3">Чати з клієнтами</h4>
+<table class="table table-sm table-hover">
+  <thead style="background-color: #2e2e32; color: var(--accent)">
+    <tr>
+      <th>Клієнт</th>
+      <th>Статус</th>
+      <th>Дата</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for o in chats %}
+    <tr>
+      <td>{{ o.customer.full_name }}</td>
+      <td>{{ o.status }}</td>
+      <td>{{ o.timestamp.strftime('%d.%m %H:%M') }}</td>
+      <td>
+        {% if o.offer_id %}
+        <a
+          href="{{ url_for('main.offer_detail',
                                   offer_id=o.offer_id,
                                   order=o.id) }}#chat"
-                 class="btn btn-sm btn-outline-primary">
-                Відкрити чат
-              </a>
-            {% else %}
-              <span class="text-muted small">пропозицію видалено</span>
-            {% endif %}
-          </td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+          class="btn btn-sm btn-outline-primary"
+        >
+          Відкрити чат
+        </a>
+        {% else %}
+        <span class="text-muted small">пропозицію видалено</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% else %}
-  <p class="text-muted mt-4">Чатів поки немає.</p>
-{% endif %}
-
-{% endblock %}
+<p class="text-muted mt-4">Чатів поки немає.</p>
+{% endif %} {% endblock %}

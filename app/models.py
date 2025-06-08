@@ -11,7 +11,6 @@ class Customer(db.Model, UserMixin):
     rating = db.Column(db.Float, default=0.0)
 
     orders = db.relationship('Order', backref='customer', lazy=True)
-
 class Contractor(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     company_name = db.Column(db.String(150), nullable=False)
@@ -22,7 +21,6 @@ class Contractor(db.Model, UserMixin):
 
     offers = db.relationship('Offer', backref='contractor', lazy=True)
     orders = db.relationship('Order', backref='contractor', lazy=True)
-
 class Offer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     material = db.Column(db.String(100), nullable=False)
@@ -33,8 +31,6 @@ class Offer(db.Model):
 
     contractor_id = db.Column(db.Integer, db.ForeignKey('contractor.id'), nullable=False)
     orders = db.relationship('Order', backref='offer', lazy=True)
-
-
 class Order(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     stl_filename = db.Column(db.String(255), nullable=False)
@@ -65,7 +61,6 @@ class ChatMessage(db.Model):
 progress_image      = db.Column(db.String(255))
 cancellation_reason = db.Column(db.String(500))
 messages = db.relationship('ChatMessage', backref='order', lazy=True)
-
 class Rating(db.Model):
     id            = db.Column(db.Integer, primary_key=True)
     order_id      = db.Column(db.Integer, db.ForeignKey('order.id'))
