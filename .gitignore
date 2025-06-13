@@ -56,3 +56,4 @@ Thumbs.db
 
 # 📂 Flask міграції
 migrations/
+*.pyc
